@@ -18,7 +18,7 @@ ctypedef np.uint64_t DT_UL_NP_t
 ctypedef np.int64_t DT_LL_NP_t
 
 
-cdef extern from "rand_gen_mp.h" nogil:
+cdef extern from "./rand_gen_mp.h" nogil:
     cdef:
         DT_D rand_c()
         void warm_up()  # call this everytime
@@ -28,11 +28,30 @@ cdef extern from "rand_gen_mp.h" nogil:
 
 warm_up()
 
-cdef extern from "quick_sort.h" nogil:
+
+cdef extern from "./quick_sort.h" nogil:
     cdef:
-        void quick_sort(DT_D arr[],
-                        DT_UL first_index,
-                        DT_UL last_index)
+        void quick_sort(DT_D arr[], DT_UL first_index, DT_UL last_index)
+
+
+cdef extern from "./searchsorted.h" nogil:
+    cdef:
+        DT_UL searchsorted(DT_D arr[], DT_D value, DT_UL arr_size)
+
+
+cpdef np.ndarray searchsorted_cy(DT_D[:] in_arr, DT_D[:] value_arr):
+    cdef:
+        Py_ssize_t i
+        
+        DT_UL arr_size = in_arr.shape[0], val_arr_size = value_arr.shape[0]
+        
+        np.ndarray[DT_UL_NP_t, ndim=1, mode='c'] sort_idxs_arr
+        
+    sort_idxs_arr = np.zeros(val_arr_size, dtype=np.uint64)
+    
+    for i in range(val_arr_size):
+        sort_idxs_arr[i] = searchsorted(&in_arr[0], value_arr[i], arr_size)
+    return sort_idxs_arr
 
 
 cpdef np.ndarray gen_usph_vecs_mp(DT_UL n_vecs, DT_UL n_dims, DT_UL n_cpus):
@@ -112,7 +131,7 @@ cpdef np.ndarray gen_usph_vecs(n_vecs, n_dims):
 cpdef np.ndarray depth_ftn_mp(const DT_D_NP_t[:, :] x, 
                               const DT_D_NP_t[:, :] y, 
                               const DT_D_NP_t[:, :] ei,
-                              DT_UL n_cpus=1):
+                              const DT_UL n_cpus=1):
     
     cdef:
         Py_ssize_t i, j, k
@@ -132,15 +151,7 @@ cpdef np.ndarray depth_ftn_mp(const DT_D_NP_t[:, :] x,
     dy_sort = dys.copy()
     
     numl = np.zeros((n_cpus, n_mins), dtype=np.int64)
-
-#     os.environ['MKL_NUM_THREADS'] = str(1)
-#     os.environ['NUMEXPR_NUM_THREADS'] = str(1)
-#     os.environ['OMP_NUM_THREADS'] = str(1)
-#
-#     np.dot(ei, x.T, out=ds)
-#     np.dot(ei, y.T, out=dys)
-#     dy_sort = dys.copy()
-#         
+    
     for i in prange(n_ei, schedule='static', nogil=True, num_threads=n_cpus):
         tid = threadid()
         
@@ -154,32 +165,29 @@ cpdef np.ndarray depth_ftn_mp(const DT_D_NP_t[:, :] x,
             for k in range(n_dims):
                 dys[tid, j] = dys[tid, j] + (ei[i, k] * y[j, k])
             dy_sort[tid, j] = dys[tid, j]
-                
+                        
         quick_sort(&ds[tid, 0], <DT_UL> 0, <DT_UL> (n_x - 1))
         quick_sort(&dy_sort[tid, 0], <DT_UL> 0, <DT_UL> (n_mins - 1))
         
         if (n_mins % 2) == 0:
-            dy_med = (dy_sort[tid, n_mins / 2] + 
-                      dy_sort[tid, n_mins / 2 - 1]) / 2.0
+            dy_med = (dy_sort[tid, <DT_UL> (n_mins / 2)] + 
+                      dy_sort[tid, <DT_UL> ((n_mins / 2) - 1)]) / 2.0
         else:
             dy_med = dy_sort[tid, n_mins / 2]
-        
+            
         for j in range(n_mins):
             dys[tid, j] = ((dys[tid, j] - dy_med) * _inc_mult) + dy_med
  
-        with gil:
-            numl[tid, :] = np.searchsorted(ds[tid, :], dys[tid, :])
-            
         for j in range(n_mins):
-            _idx = n_mins - numl[tid, j] # 0.0 secs
+            numl[tid, j] = searchsorted(&ds[tid, 0], dys[tid, j], n_x)
+ 
+        for j in range(n_mins):
+            _idx = n_x - numl[tid, j]
             
             if _idx < numl[tid, j]:
                 numl[tid, j] = _idx
                   
             if numl[tid, j] < mins[tid, j]:
                 mins[tid, j] = numl[tid, j]
-                  
-            if mins[tid, j] < 0:
-                mins[tid, j] = 0
 
     return mins.min(axis=0).astype(np.uint64)
