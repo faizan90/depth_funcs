@@ -18,30 +18,8 @@ np.set_printoptions(precision=3,
 import pyximport
 pyximport.install()
 
+from pyth_ftns import plot_depths_hist
 from depth_cy_ftns import gen_usph_vecs_mp, depth_ftn_mp
-
-
-def depth_ftn_py(x, y, ei):
-    mins = x.shape[0] * np.ones((y.shape[0],))  # initial value
-
-    for i in ei:  # iterate over unit vectors
-        d = np.dot(i, x.T)  # scalar product
-
-        dy = np.dot(i, y.T)  # scalar product
-
-        # d = d[np.argsort(d)]  # argsort gives the sorting indices then we used it to sort d
-        d.sort()
-
-        dy_med = np.median(dy)
-        dy = ((dy - dy_med) * (1 - (1e-7))) + dy_med
-
-        numl = np.searchsorted(d, dy)  # find the index of each project y in x to preserve order
-        numg = d.shape[0] - numl  # numl is number of points less then projected y
-
-        mins = np.min(np.vstack([mins, np.min(np.vstack([numl, numg]), axis=0)]), 0)  # find new min
-
-    return mins.astype(np.uint64)
-
 
 if __name__ == '__main__':
     print('\a\a\a\a Started on %s \a\a\a\a\n' % time.asctime())
@@ -55,7 +33,9 @@ if __name__ == '__main__':
 
     rand_min = -3
     rand_max = +3
-    n_rand_pts = 10000
+    n_rand_pts = 1000
+
+    plot_depths_hist_flag = True
 
     os.chdir(main_dir)
 
@@ -102,7 +82,28 @@ if __name__ == '__main__':
         print('Depth of point %s in %d random points: %d (%s)' %
               (str(test_pts[i]), n_rand_pts, depth_cy[i], test_pts_msgs[i]))
 
-#     print(depth_py)
+    if plot_depths_hist_flag:
+        print('\n')
+        print('#### Plotting depths histogram ####')
+        rand_test_pts = rand_min + ((rand_max - rand_min) *
+                                    np.random.random((n_rand_pts, n_dims)))
+
+        x_mid_idx = int(0.5 * n_rand_pts)
+        y_mid_idx = int(0.5 * rand_test_pts.shape[0])
+        hi_val_thresh = 0
+        out_fig_loc = main_dir / 'test_fig.png'
+        fig_size = (13, 7)
+        title_lab = 'Random test case'
+
+        plot_depths_hist(rand_pts[:x_mid_idx],
+                         rand_pts[x_mid_idx:],
+                         rand_test_pts[:y_mid_idx],
+                         rand_test_pts[y_mid_idx:],
+                         usph_vecs,
+                         title_lab,
+                         out_fig_loc,
+                         n_cpus,
+                         fig_size)
 
     tre = 1
 

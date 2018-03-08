@@ -102,3 +102,4 @@ ENV/
 
 # mypy
 .mypy_cache/
+/test_fig.png
