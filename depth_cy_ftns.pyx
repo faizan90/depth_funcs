@@ -131,7 +131,7 @@ cpdef np.ndarray gen_usph_vecs(n_vecs, n_dims):
 cpdef np.ndarray depth_ftn_mp(const DT_D_NP_t[:, :] x, 
                               const DT_D_NP_t[:, :] y, 
                               const DT_D_NP_t[:, :] ei,
-                              const DT_UL n_cpus=1):
+                              DT_UL n_cpus=1):
     
     cdef:
         Py_ssize_t i, j, k
@@ -146,8 +146,8 @@ cpdef np.ndarray depth_ftn_mp(const DT_D_NP_t[:, :] x,
     n_dims = ei.shape[1]
     mins = np.full((n_cpus, n_mins), n_x, dtype=np.int64)
 
-    ds = np.zeros((n_cpus, x.shape[0]), dtype=np.float64)
-    dys = np.zeros((n_cpus, y.shape[0]), dtype=np.float64)
+    ds = np.zeros((n_cpus, n_x), dtype=np.float64)
+    dys = np.zeros((n_cpus, n_mins), dtype=np.float64)
     dy_sort = dys.copy()
     
     numl = np.zeros((n_cpus, n_mins), dtype=np.int64)
