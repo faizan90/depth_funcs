@@ -54,12 +54,15 @@ def plot_depths_hist(x_arr_left,
                      title_lab,
                      out_fig_loc,
                      n_cpus,
-                     fig_size):
+                     fig_size,
+                     labs=None):
 
     depth_arrs_list = []
     hist_labs = []
 
-    hist_bins = np.concatenate((np.arange(4), [10000]))
+    out_fig_loc = str(out_fig_loc)
+
+    hist_bins = np.concatenate((np.arange(5), [10000]))
 
     thresh_depth = hist_bins[-3]
     n_dims = x_arr_left.shape[1]
@@ -69,21 +72,28 @@ def plot_depths_hist(x_arr_left,
                             y_arr_left,
                             y_arr_right], 2))
 
-    labs_perms = list(perms(['x_left', 'x_right', 'y_left', 'y_right'], 2))
+    if labs is None:
+        labs = ['x_left', 'x_right', 'y_left', 'y_right']
+        labs_perms = list(perms(labs, 2))
+    else:
+        assert len(labs) == 4
+        labs_perms = list(perms(labs, 2))
 
-    for arrs, labs in zip(arr_perms, labs_perms):
+    for arrs, _labs in zip(arr_perms, labs_perms):
         if arrs[0].shape[0] and arrs[1].shape[0]:
-            _arr = depth_ftn_mp(arrs[0], arrs[1], eis_arr, n_cpus)
+            _arr = depth_ftn_mp(arrs[1], arrs[0], eis_arr, n_cpus)
             _arr[_arr > thresh_depth] = thresh_depth
             depth_arrs_list.append(_arr)
-        hist_labs.append('%s_in_%s' % labs)
+            hist_labs.append('%s_in_%s' % _labs)
+
+    _out_path, _out_ext = out_fig_loc.rsplit('.', 1)
 
     plt.figure(figsize=fig_size)
     rwidth = 0.98
-    for mins, hist_lab in zip(depth_arrs_list, hist_labs):
-        if not mins.shape[0]:
-            continue
 
+    items_per_fig = 4
+
+    for i, (mins, hist_lab) in enumerate(zip(depth_arrs_list, hist_labs), 1):
         plt.hist(mins,
                  bins=hist_bins,
                  alpha=0.3,
@@ -91,31 +101,39 @@ def plot_depths_hist(x_arr_left,
                  rwidth=rwidth,
                  label=hist_lab,
                  align='mid')
-        rwidth -= 0.05
+        rwidth -= 0.17
 
-    hist_title = ''
-    hist_title += (('%s\n'
-                    '%d %d-dimensional unit vectors used\n'
-                    'n_x_left=%d, n_x_right=%d, '
-                    'n_y_left=%d, n_y_right=%d') %
-                   (title_lab,
-                    eis_arr.shape[0],
-                    n_dims,
-                    x_arr_left.shape[0],
-                    x_arr_right.shape[0],
-                    y_arr_left.shape[0],
-                    y_arr_right.shape[0]))
-    plt.title(hist_title)
+        if (not (i % items_per_fig)) or (i == len(hist_labs)):
+            hist_title = ''
+            hist_title += (('%s\n'
+                            '%d %d-dimensional unit vectors used\n'
+                            'n_%s=%d, n_%s=%d, '
+                            'n_%s=%d, n_%s=%d') %
+                           (title_lab,
+                            eis_arr.shape[0],
+                            n_dims,
+                            labs[0],
+                            x_arr_left.shape[0],
+                            labs[1],
+                            x_arr_right.shape[0],
+                            labs[2],
+                            y_arr_left.shape[0],
+                            labs[3],
+                            y_arr_right.shape[0]))
+            plt.title(hist_title)
 
-    plt.xticks(hist_bins[:-2] + 0.5,
-               (hist_bins[:-3].tolist() +
-                ['>=%d' % thresh_depth]))
-    plt.xlim(hist_bins[0], hist_bins[-2])
-    plt.ylim(0, 1)
+            plt.xticks(hist_bins[:-2] + 0.5,
+                       (hist_bins[:-3].tolist() +
+                        ['>=%d' % thresh_depth]))
+            plt.xlim(hist_bins[0], hist_bins[-2])
+            plt.ylim(0, 1)
 
-    plt.legend()
-    plt.grid()
-    plt.savefig(str(out_fig_loc), bbox_inches='tight')
+            plt.legend()
+            plt.grid()
+            plt.savefig(_out_path + ('_%0.2d.%s' % (i, _out_ext)), bbox_inches='tight')
+            rwidth = 0.98
+            plt.clf()
+
     plt.close()
     return
 

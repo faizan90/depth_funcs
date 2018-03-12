@@ -35,7 +35,7 @@ if __name__ == '__main__':
     rand_max = +3
     n_rand_pts = 1000
 
-    plot_depths_hist_flag = True
+    plot_depths_hist_flag = False
 
     os.chdir(main_dir)
 
@@ -81,6 +81,10 @@ if __name__ == '__main__':
     for i in range(test_pts.shape[0]):
         print('Depth of point %s in %d random points: %d (%s)' %
               (str(test_pts[i]), n_rand_pts, depth_cy[i], test_pts_msgs[i]))
+
+    _idxs = (rand_pts[:, 0] > (rand_min + 1))
+    depth_cy = depth_ftn_mp(rand_pts, rand_pts[_idxs, :], usph_vecs, n_cpus)
+    print('Points with depths of 0:', depth_cy[depth_cy == 0].sum())
 
     if plot_depths_hist_flag:
         print('\n')
