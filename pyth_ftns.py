@@ -13,11 +13,6 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-np.set_printoptions(precision=3,
-                    threshold=2000,
-                    linewidth=200000,
-                    formatter={'float': '{:+0.1f}'.format})
-
 import pyximport
 pyximport.install()
 
