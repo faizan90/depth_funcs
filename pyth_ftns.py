@@ -40,6 +40,30 @@ def depth_ftn_py(x, y, ei):
 
     return mins.astype(np.uint64)
 
+# def depth_ftn_py_2(x, y, ei):
+#     mins = x.shape[0] * np.ones((y.shape[0],))  # initial value
+#
+#     for i in ei:  # iterate over unit vectors
+#         d = np.dot(i, x.T)  # scalar product
+#
+#         dy = np.dot(i, y.T)  # scalar product
+#
+#         # d = d[np.argsort(d)]  # argsort gives the sorting indices then we used it to sort d
+# #         d.sort()
+#
+#         dy_med = np.median(dy)
+#         dy = ((dy - dy_med) * (1 - (1e-7))) + dy_med
+#
+#         for i, pt in enumerate(dy):
+#             mins[i] = min([mins[i], (d > pt).sum(), (d < pt).sum()])
+#
+# #         numl = np.searchsorted(d, dy)  # find the index of each project y in x to preserve order
+# #         numg = d.shape[0] - numl  # numl is number of points less then projected y
+# #
+# #         mins = np.min(np.vstack([mins, np.min(np.vstack([numl, numg]), axis=0)]), 0)  # find new min
+#
+#     return mins.astype(np.uint64)
+
 
 def plot_depths_hist(x_arr_left,
                      x_arr_right,
@@ -50,7 +74,8 @@ def plot_depths_hist(x_arr_left,
                      out_fig_loc,
                      n_cpus,
                      fig_size,
-                     labs=None):
+                     labs=None,
+                     self_comp=True):
 
     depth_arrs_list = []
     hist_labs = []
@@ -73,6 +98,17 @@ def plot_depths_hist(x_arr_left,
     else:
         assert len(labs) == 4
         labs_perms = list(perms(labs, 2))
+
+    if self_comp:
+        for _arr in [x_arr_left,
+                     x_arr_right,
+                     y_arr_left,
+                     y_arr_right]:
+
+            arr_perms.append((_arr, _arr))
+
+        for _labs in labs:
+            labs_perms.append((_labs, _labs))
 
     for arrs, _labs in zip(arr_perms, labs_perms):
         if arrs[0].shape[0] and arrs[1].shape[0]:

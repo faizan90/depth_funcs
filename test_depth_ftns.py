@@ -13,12 +13,12 @@ import numpy as np
 np.set_printoptions(precision=3,
                     threshold=2000,
                     linewidth=200000,
-                    formatter={'float': '{:+0.1f}'.format})
+                    formatter={'float': '{:+0.3f}'.format})
 
 import pyximport
 pyximport.install()
 
-from pyth_ftns import plot_depths_hist
+from pyth_ftns import plot_depths_hist, depth_ftn_py
 from depth_cy_ftns import gen_usph_vecs_mp, depth_ftn_mp
 
 if __name__ == '__main__':
@@ -67,17 +67,17 @@ if __name__ == '__main__':
     print('%d out of %d unit vectors have lengths greater than 1!' %
           (idxs.sum(), int(n_vecs)))
 
-    print('\nHistograms of each dimension...')
-    for i in range(n_dims):
-        print('Dimension no:', i + 1)
-        hists = np.histogram(usph_vecs[:, i], bins=np.linspace(-1.0, 1.0, 21))
-        print(hists[1])
-        print(hists[0])
-        print('\n')
-
+#     print('\nHistograms of each dimension...')
+#     for i in range(n_dims):
+#         print('Dimension no:', i + 1)
+#         hists = np.histogram(usph_vecs[:, i], bins=np.linspace(-1.0, 1.0, 21))
+#         print(hists[1])
+#         print(hists[0])
+#         print('\n')
+#
     print('#### Depth test ####')
     depth_cy = depth_ftn_mp(rand_pts, test_pts, usph_vecs, n_cpus)
-#     depth_py = depth_ftn_py(rand_pts, rand_pt, usph_vecs)
+
     for i in range(test_pts.shape[0]):
         print('Depth of point %s in %d random points: %d (%s)' %
               (str(test_pts[i]), n_rand_pts, depth_cy[i], test_pts_msgs[i]))
