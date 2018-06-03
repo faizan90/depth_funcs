@@ -1,6 +1,6 @@
-# cython: nonecheck=True
-# cython: boundscheck=True
-# cython: wraparound=True
+# cython: nonecheck=False
+# cython: boundscheck=False
+# cython: wraparound=False
 # cython: cdivision=True
 # cython: language_level=3
 # cython: infer_types(None)
@@ -12,7 +12,6 @@ import numpy as np
 cimport numpy as np
 from cython.parallel import prange, threadid
 
-from .dtypes cimport DT_D, DT_UL, DT_ULL
 from .data_depths cimport depth_ftn_mp
 
 DT_D_NP = np.float64

@@ -1,5 +1,9 @@
 //#include <stdio.h>
 
+typedef double DT_D;
+typedef long long DT_UL;
+
+
 DT_UL searchsorted(const DT_D arr[], const DT_D value, const DT_UL arr_size) {
 	// arr must be sorted
 	DT_UL first = 0, last = arr_size - 1, curr_idx;
@@ -13,7 +17,7 @@ DT_UL searchsorted(const DT_D arr[], const DT_D value, const DT_UL arr_size) {
 	}
 
 	while (first <= last) {
-		curr_idx = 0.5 * (first + last);
+		curr_idx = (DT_UL) 0.5 * (first + last);
 		if ((value > arr[curr_idx]) && (value <= arr[curr_idx + 1])) {
 			return curr_idx + 1;
 		}

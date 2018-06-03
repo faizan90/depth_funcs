@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 typedef double DT_D;
-typedef long DT_UL;
+typedef long long DT_UL;
 typedef unsigned long long DT_ULL;
 
 const DT_D MOD_long_long = (DT_D) ULLONG_MAX;
@@ -21,8 +21,8 @@ DT_D rand_c() {
 }
 
 void warm_up() {
-	DT_UL i;
-	for (i=0; i<1000; ++i) {
+	size_t i;
+	for (i = 0; i < 1000; ++i) {
 	    //printf("%0.10f\n", rand_c());
 	    rand_c();
 	}
@@ -38,7 +38,7 @@ void re_seed() {
 
 DT_D rand_c_mp(DT_ULL *rnd_j) {
 	DT_ULL rnd_k = *rnd_j;
-	
+
     rnd_k ^= rnd_k << A;
     rnd_k ^= rnd_k >> B;
     rnd_k ^= rnd_k << C;
@@ -48,9 +48,9 @@ DT_D rand_c_mp(DT_ULL *rnd_j) {
 
 
 void warm_up_mp(DT_ULL *seeds_arr, DT_UL n_seeds) {
-	DT_UL i, j;
-	for (j=0; j<n_seeds; ++j) {
-		for (i=0; i<50; ++i) {
+	size_t i, j;
+	for (j = 0; j < (size_t) n_seeds; ++j) {
+		for (i = 0; i < 50; ++i) {
 		    //printf("%0.10f\n", rand_c_mp(&seeds_arr[j]));
 		    rand_c_mp(&seeds_arr[j]);
 		}

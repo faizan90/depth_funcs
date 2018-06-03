@@ -9,6 +9,6 @@ def make_ext(modname, pyxfilename):
     return Extension(name=modname,
                      sources=[pyxfilename],
                      language='c++',
-                     extra_compile_args=[r"/openmp"],
+                     extra_compile_args=[r"/openmp", r"/Ox"],
                      extra_link_args=[],
                      include_dirs=[get_include(), mod_dir])

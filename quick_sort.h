@@ -9,6 +9,10 @@ Worst case space complexity: O(n)
 
 */
 
+typedef double DT_D;
+typedef long long DT_UL;
+
+
 void quick_sort(DT_D arr[], DT_UL first_index, DT_UL last_index) {
   // declaring index variables
   DT_UL pivotIndex, index_a, index_b;
