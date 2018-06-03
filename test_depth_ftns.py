@@ -18,8 +18,10 @@ np.set_printoptions(precision=3,
 import pyximport
 pyximport.install()
 
-from pyth_ftns import plot_depths_hist, depth_ftn_py
-from depth_cy_ftns import gen_usph_vecs_mp, depth_ftn_mp
+from depth_funcs import (plot_depths_hist,
+                         depth_ftn_py,
+                         gen_usph_vecs_mp,
+                         depth_ftn_mp)
 
 if __name__ == '__main__':
     print('\a\a\a\a Started on %s \a\a\a\a\n' % time.asctime())
