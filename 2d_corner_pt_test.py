@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     main_dir = Path(os.getcwd())
 
-    n_cpus = 1
+    n_cpus = 7
     n_vecs = int(1e5)
 
     os.chdir(main_dir)

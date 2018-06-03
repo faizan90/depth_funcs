@@ -26,13 +26,6 @@ cdef extern from "./searchsorted.h" nogil:
         DT_UL searchsorted(DT_D arr[], DT_D value, DT_UL arr_size)
 
 
-cdef inline abs(DT_D ref):
-    if ref < 0:
-        return -ref
-    else:
-        return ref
-
-
 cpdef np.ndarray depth_ftn_mp(
     const DT_D[:, :] ref, 
     const DT_D[:, :] test, 
@@ -52,6 +45,8 @@ cpdef np.ndarray depth_ftn_mp(
     n_uvecs = uvecs.shape[0]
     n_dims = uvecs.shape[1]
     mins = np.full((n_cpus, n_mins), n_x, dtype=DT_LL_NP)
+    
+    print(n_x, n_mins, n_uvecs, n_dims, n_cpus)
 
     ds = np.zeros((n_cpus, n_x), dtype=DT_D_NP)
     dys = np.zeros((n_cpus, n_mins), dtype=DT_D_NP)

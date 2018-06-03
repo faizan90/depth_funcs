@@ -32,31 +32,29 @@ if __name__ == '__main__':
 
     main_dir = Path(os.getcwd())
 
-    n_cpus = 31
-    n_unit_vecs = int(1e3)
-    n_dims = 6
-    chk_iter = int(1e3)
+    n_cpus = 7
+    n_unit_vecs = int(1e2)
+    n_dims = 3
+    chk_iter = int(1e2)
     max_iters = 100
     vol_tol = 0.001
 
     os.chdir(main_dir)
 
-#     chull_arr = np.array(list(product(*[[1.0111, 1.0]] * n_dims)), dtype=float)
-    chull_arr = np.array(list(product(*[[1.0, 0.0],
-                                        [2.0, 3.0],
-                                        [-4.0, -3.0],
-                                        [-2.0, -5.0],
-                                        [16.0, 19.0],
-                                        [100.0, 102.0]])), dtype=float)
+    chull_arr = np.array(list(product(*[[1.0111, 1.0]] * n_dims)), dtype=float)
+#     chull_arr = np.array(list(product(*[[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 0, 1], [1, 0, 1], [1, 1, 1]])), dtype=float)
 #     print('chull_arr:\n', chull_arr)
     print('chull shape before depth:', chull_arr.shape)
-    chull_arr = chull_arr - np.random.random(size=chull_arr.shape) + np.random.random(size=chull_arr.shape)
+#     chull_arr = chull_arr - np.random.random(size=chull_arr.shape) + np.random.random(size=chull_arr.shape)
 
+    print('Generating unit vecs...')
     unit_vecs = gen_usph_vecs_mp(n_unit_vecs, n_dims, n_cpus)
-    chull_arr = chull_arr[depth_ftn_mp(chull_arr, chull_arr, unit_vecs, n_cpus) == 1]
-    print('chull shape after depths:', chull_arr.shape)
+
+#     chull_arr = chull_arr[depth_ftn_mp(chull_arr, chull_arr, unit_vecs, n_cpus) == 1]
+#     print('chull shape after depths:', chull_arr.shape)
 #     print(unit_vecs)
     print('unit_vecs shape:', unit_vecs.shape)
+    print('Computing unit hull volume...')
     unit_hull_vol = cmpt_rand_pts_chull_vol(chull_arr,
                                             unit_vecs,
                                             chk_iter,
