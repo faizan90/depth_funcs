@@ -33,11 +33,14 @@ warm_up()
 cpdef np.ndarray gen_usph_vecs(n_vecs, n_dims):
     cdef:
         Py_ssize_t i, j
-        DT_UL re_seed_i = int(1e6)
-        DT_D curr_rand, mag
+        DT_UL re_seed_i = <DT_UL> 1e6
+        DT_D curr_rand, mag, rn_ct = 0.0
 
         DT_D[::1] vec
         DT_D[:, ::1] vecs_arr
+
+    assert n_vecs > 0, 'n_vecs should be more than 0!'
+    assert n_dims > 0, 'n_dims should be more than 0!'
 
     vec = np.zeros(n_dims, dtype=DT_D_NP)
     mags_arr = np.zeros(n_vecs, dtype=DT_D_NP)
@@ -53,28 +56,36 @@ cpdef np.ndarray gen_usph_vecs(n_vecs, n_dims):
                 mag += curr_rand**2
             mag = mag**0.5
 
+            rn_ct += n_dims
+            if (rn_ct / re_seed_i) > 1:
+                re_seed()
+                rn_ct = 0.0
+
         for j in range(n_dims):
             vecs_arr[i, j] = vec[j] / mag
 
-        if (i % re_seed_i) == 0:
-            re_seed()
     return np.asarray(vecs_arr)
 
 
 cpdef np.ndarray gen_usph_vecs_mp(DT_UL n_vecs, DT_UL n_dims, DT_UL n_cpus):
     cdef:
         Py_ssize_t i, j
-        DT_UL tid, re_seed_i = int(1e6)
+        DT_UL tid, re_seed_i = <DT_UL> 1e6
         DT_D curr_rand, mag
 
         DT_ULL[::1] seeds_arr
+        DT_D[::1] rn_ct_arr
         DT_D[:, ::1] vec, vecs_arr
+
+    assert n_vecs > 0, 'n_vecs should be more than 0!'
+    assert n_dims > 0, 'n_dims should be more than 0!'
+    assert n_cpus > 0, 'n_cpus should be more than 0!'
 
     vec = np.zeros((n_cpus, n_dims), dtype=DT_D_NP)
     mags_arr = np.zeros(n_vecs, dtype=DT_D_NP)
     vecs_arr = np.zeros((n_vecs, n_dims), dtype=DT_D_NP)
     seeds_arr = np.zeros(n_cpus, dtype=DT_UL_NP)
-
+    rn_ct_arr = np.zeros(n_cpus, dtype=DT_D_NP)
     # prep the MP RNG
     for tid in range(n_cpus):
         seeds_arr[tid] = <DT_ULL> (time.time() * 10000)
@@ -92,15 +103,17 @@ cpdef np.ndarray gen_usph_vecs_mp(DT_UL n_vecs, DT_UL n_dims, DT_UL n_cpus):
                 mag = mag + curr_rand**2
             mag = mag**0.5
 
+            rn_ct_arr[tid] = rn_ct_arr[tid] + n_dims
+            if (rn_ct_arr[tid]  / re_seed_i) > 1:
+                with gil:
+                    seeds_arr[tid] = <DT_ULL> (time.time() * 10000)
+                    time.sleep(0.001)
+    
+                for j in range(1000):
+                    rand_c_mp(&seeds_arr[tid])
+                rn_ct_arr[tid] = 0.0
+
         for j in range(n_dims):
             vecs_arr[i, j] = vec[tid, j] / mag
-
-        if (i % (re_seed_i + tid)) == 0:
-            with gil:
-                seeds_arr[tid] = <DT_ULL> (time.time() * 10000)
-                time.sleep(0.001)
-
-            for j in range(1000):
-                rand_c_mp(&seeds_arr[tid])
 
     return np.asarray(vecs_arr)

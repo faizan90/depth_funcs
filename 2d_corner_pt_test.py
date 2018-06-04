@@ -38,12 +38,16 @@ if __name__ == '__main__':
 
     unit_vecs = gen_usph_vecs_mp(n_vecs, 2, n_cpus)
     rand_pts = np.random.random(size=(100, 2))
-    depths = depth_ftn_mp(rand_pts, rand_pts, unit_vecs, n_cpus)
+    rand_pts_2 = np.random.random(size=(100, 2))
+    chull_pts = rand_pts  # s[depth_ftn_mp(rand_pts, rand_pts, unit_vecs, n_cpus) == 1]
 
-    corner_pts = rand_pts[depths == 1, :]
+    depths = depth_ftn_mp(chull_pts, chull_pts, unit_vecs, n_cpus)
 
-    plt.scatter(rand_pts[:, 0], rand_pts[:, 1])
-    plt.scatter(corner_pts[:, 0], corner_pts[:, 1], alpha=0.7)
+    corner_pts = chull_pts[depths == 1, :]
+
+    plt.scatter(chull_pts[:, 0], chull_pts[:, 1], label='chull')
+    plt.scatter(corner_pts[:, 0], corner_pts[:, 1], label='rands (d==1)', alpha=0.7)
+    plt.legend(framealpha=0.5)
     plt.grid()
 
     STOP = timeit.default_timer()  # Ending time

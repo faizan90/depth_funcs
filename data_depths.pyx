@@ -36,17 +36,22 @@ cpdef np.ndarray depth_ftn_mp(
         Py_ssize_t i, j, k
         DT_UL n_mins, n_uvecs, tid, _idx, n_x, n_dims
         DT_D dy_med, _inc_mult = (1 - (1e-7))
-        
+
         DT_UL[:, ::1] mins, numl
         DT_D[:, ::1] ds, dys, dy_sort
+
+    assert ref.shape[0] and ref.shape[1], 'No values in ref!'
+    assert test.shape[0] and ref.shape[1], 'No values in test!'
+    assert uvecs.shape[0] and uvecs.shape[1], 'No values in uvecs!'
+    assert ref.shape[1] == test.shape[1] == uvecs.shape[1], (
+        'Unequal ref, test and uvecs dimensions!')
+    assert n_cpus > 0, 'n_cpus should be more than 0!'
 
     n_x = ref.shape[0]
     n_mins = test.shape[0]
     n_uvecs = uvecs.shape[0]
     n_dims = uvecs.shape[1]
     mins = np.full((n_cpus, n_mins), n_x, dtype=DT_LL_NP)
-    
-    print(n_x, n_mins, n_uvecs, n_dims, n_cpus)
 
     ds = np.zeros((n_cpus, n_x), dtype=DT_D_NP)
     dys = np.zeros((n_cpus, n_mins), dtype=DT_D_NP)
@@ -54,9 +59,9 @@ cpdef np.ndarray depth_ftn_mp(
 
     numl = np.zeros((n_cpus, n_mins), dtype=DT_LL_NP)
 
-    for i in prange(n_uvecs, 
-                    schedule='dynamic', 
-                    nogil=True, 
+    for i in prange(n_uvecs,
+                    schedule='dynamic',
+                    nogil=True,
                     num_threads=n_cpus):
         tid = threadid()
 
@@ -82,7 +87,7 @@ cpdef np.ndarray depth_ftn_mp(
 
         for j in range(n_mins):
             dys[tid, j] = ((dys[tid, j] - dy_med) * _inc_mult) + dy_med
- 
+
         for j in range(n_mins):
             numl[tid, j] = searchsorted(&ds[tid, 0], dys[tid, j], n_x)
  
