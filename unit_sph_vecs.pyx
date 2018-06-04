@@ -18,6 +18,12 @@ DT_UL_NP = np.uint64
 DT_LL_NP = np.int64
 
 
+cdef extern from "math.h" nogil:
+    cdef DT_D log(DT_D x)
+    cdef DT_D M_PI
+    cdef DT_D INFINITY
+
+
 cdef extern from "./rand_gen_mp.h" nogil:
     cdef:
         DT_D rand_c()
@@ -30,7 +36,113 @@ cdef extern from "./rand_gen_mp.h" nogil:
 warm_up()
 
 
-cpdef np.ndarray gen_usph_vecs(n_vecs, n_dims):
+cdef DT_D usph_norm_ppf(DT_D p) nogil:
+    cdef:
+        DT_D t, z
+
+    if p <= 0.0:
+        return -INFINITY
+    elif p >= 1.0:
+        return INFINITY
+
+    if p > 0.5:
+        t = (-2.0 * log(1 - p))**0.5
+    else:
+        t = (-2.0 * log(p))**0.5
+
+    z = -0.322232431088 + t * (-1.0 + t * (-0.342242088547 + t * (
+        (-0.020423120245 + t * -0.453642210148e-4))))
+    z = z / (0.0993484626060 + t * (0.588581570495 + t * (
+        (0.531103462366 + t * (0.103537752850 + t * 0.3856070063e-2)))))
+    z = z + t
+
+    if p < 0.5:
+        z = -z
+    return z
+
+
+cpdef np.ndarray gen_usph_vecs_norm_dist(DT_UL n_vecs, 
+                                         DT_UL n_dims, 
+                                         DT_UL n_cpus):
+    cdef:
+        Py_ssize_t i, j
+        DT_UL re_seed_i = <DT_UL> 1e6
+        DT_D mag, rn_ct = 0.0
+        DT_D[:, ::1] ndim_sph_vecs
+
+    assert n_vecs > 0, 'n_vecs should be more than 0!'
+    assert n_dims > 0, 'n_dims should be more than 0!'
+
+    ndim_sph_vecs = np.empty((n_vecs, n_dims), dtype=DT_D_NP)
+
+    for i in range(n_vecs):
+        mag = 0.0
+        for j in range(n_dims):
+            ndim_sph_vecs[i, j] = usph_norm_ppf(rand_c())
+            mag = mag + (ndim_sph_vecs[i, j]**2)
+        mag = mag**0.5
+
+        for j in range(n_dims):
+            ndim_sph_vecs[i, j] = ndim_sph_vecs[i, j] / mag
+
+        rn_ct += n_dims
+        if (rn_ct / re_seed_i) > 1:
+            re_seed()
+            rn_ct = 0.0
+    return np.asarray(ndim_sph_vecs)
+
+
+cpdef np.ndarray gen_usph_vecs_norm_dist_mp(DT_UL n_vecs, 
+                                            DT_UL n_dims, 
+                                            DT_UL n_cpus):
+    cdef:
+        Py_ssize_t i, j, tid
+        DT_UL re_seed_i = <DT_UL> 1e6
+        DT_D mag
+
+        DT_ULL[::1] seeds_arr
+        DT_D[::1] rn_ct_arr
+        DT_D[:, ::1] ndim_sph_vecs
+
+    assert n_vecs > 0, 'n_vecs should be more than 0!'
+    assert n_dims > 0, 'n_dims should be more than 0!'
+    assert n_cpus > 0, 'n_cpus should be more than 0!'
+
+    ndim_sph_vecs = np.empty((n_vecs, n_dims), dtype=DT_D_NP)
+    seeds_arr = np.zeros(n_cpus, dtype=DT_UL_NP)
+    rn_ct_arr = np.zeros(n_cpus, dtype=DT_D_NP)
+
+    for tid in range(n_cpus):
+        seeds_arr[tid] = <DT_ULL> (time.time() * 10000)
+        time.sleep(0.001)
+    warm_up_mp(&seeds_arr[0], n_cpus)
+
+    for i in prange(n_vecs, schedule='static', nogil=True, num_threads=n_cpus):
+        tid = threadid()
+        mag = 0.0
+        for j in range(n_dims):
+            ndim_sph_vecs[i, j] = usph_norm_ppf(rand_c_mp(&seeds_arr[tid]))
+            mag = mag + (ndim_sph_vecs[i, j]**2)
+        mag = mag**0.5
+
+        for j in range(n_dims):
+            ndim_sph_vecs[i, j] = ndim_sph_vecs[i, j] / mag
+
+        rn_ct_arr[tid] = rn_ct_arr[tid] + n_dims
+        if (rn_ct_arr[tid]  / re_seed_i) > 1:
+            with gil:
+                seeds_arr[tid] = <DT_ULL> (time.time() * 10000)
+                time.sleep(0.001)
+
+            for j in range(1000):
+                rand_c_mp(&seeds_arr[tid])
+            rn_ct_arr[tid] = 0.0
+    return np.asarray(ndim_sph_vecs)
+
+
+cpdef np.ndarray gen_usph_vecs(DT_UL n_vecs, 
+                               DT_UL n_dims, 
+                               DT_UL n_cpus):
     cdef:
         Py_ssize_t i, j
         DT_UL re_seed_i = <DT_UL> 1e6
@@ -43,7 +155,6 @@ cpdef np.ndarray gen_usph_vecs(n_vecs, n_dims):
     assert n_dims > 0, 'n_dims should be more than 0!'
 
     vec = np.zeros(n_dims, dtype=DT_D_NP)
-    mags_arr = np.zeros(n_vecs, dtype=DT_D_NP)
     vecs_arr = np.zeros((n_vecs, n_dims), dtype=DT_D_NP)
 
     for i in range(n_vecs):
@@ -82,10 +193,10 @@ cpdef np.ndarray gen_usph_vecs_mp(DT_UL n_vecs, DT_UL n_dims, DT_UL n_cpus):
     assert n_cpus > 0, 'n_cpus should be more than 0!'
 
     vec = np.zeros((n_cpus, n_dims), dtype=DT_D_NP)
-    mags_arr = np.zeros(n_vecs, dtype=DT_D_NP)
     vecs_arr = np.zeros((n_vecs, n_dims), dtype=DT_D_NP)
     seeds_arr = np.zeros(n_cpus, dtype=DT_UL_NP)
     rn_ct_arr = np.zeros(n_cpus, dtype=DT_D_NP)
+
     # prep the MP RNG
     for tid in range(n_cpus):
         seeds_arr[tid] = <DT_ULL> (time.time() * 10000)
@@ -108,7 +219,7 @@ cpdef np.ndarray gen_usph_vecs_mp(DT_UL n_vecs, DT_UL n_dims, DT_UL n_cpus):
                 with gil:
                     seeds_arr[tid] = <DT_ULL> (time.time() * 10000)
                     time.sleep(0.001)
-    
+
                 for j in range(1000):
                     rand_c_mp(&seeds_arr[tid])
                 rn_ct_arr[tid] = 0.0

@@ -20,7 +20,7 @@ pyximport.install()
 
 from depth_funcs import (plot_depths_hist,
                          depth_ftn_py,
-                         gen_usph_vecs_mp,
+                         gen_usph_vecs_norm_dist_mp as gen_usph_vecs_mp,
                          depth_ftn_mp)
 
 if __name__ == '__main__':
@@ -30,12 +30,12 @@ if __name__ == '__main__':
     main_dir = Path(os.getcwd())
 
     n_dims = 7
-    n_vecs = int(1e4)
+    n_vecs = int(1e5)
     n_cpus = 7
 
     rand_min = -3
     rand_max = +3
-    n_rand_pts = 1000
+    n_rand_pts = int(1e6)
 
     plot_depths_hist_flag = False
 
@@ -65,18 +65,19 @@ if __name__ == '__main__':
     usph_vecs = gen_usph_vecs_mp(n_vecs, n_dims, n_cpus)
 
     mags = np.sqrt((usph_vecs ** 2).sum(axis=1))
-    idxs = (mags > 1.001)
+    idxs = (mags > 1.000001)
     print('%d out of %d unit vectors have lengths greater than 1!' %
           (idxs.sum(), int(n_vecs)))
 
-#     print('\nHistograms of each dimension...')
-#     for i in range(n_dims):
-#         print('Dimension no:', i + 1)
-#         hists = np.histogram(usph_vecs[:, i], bins=np.linspace(-1.0, 1.0, 21))
-#         print(hists[1])
-#         print(hists[0])
-#         print('\n')
-#
+    print('\nHistograms of each dimension...')
+    for i in range(n_dims):
+        print('Dimension no:', i + 1)
+        hists = np.histogram(usph_vecs[:, i], bins=np.linspace(-1.0, 1.0, 21))
+        print(hists[1])
+        print(hists[0])
+        print((hists[0] - (n_vecs / hists[0].shape[0])) / (n_vecs / hists[0].shape[0]))
+        print('\n')
+
     print('#### Depth test ####')
     depth_cy = depth_ftn_mp(rand_pts, test_pts, usph_vecs, n_cpus)
 
@@ -110,8 +111,6 @@ if __name__ == '__main__':
                          out_fig_loc,
                          n_cpus,
                          fig_size)
-
-    tre = 1
 
     STOP = timeit.default_timer()  # Ending time
     print(('\n\a\a\a Done with everything on %s.\nTotal run time was'
