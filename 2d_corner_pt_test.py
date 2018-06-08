@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
-from depth_funcs import depth_ftn_mp, gen_usph_vecs_mp
+from depth_funcs import depth_ftn_mp, gen_usph_vecs_norm_dist as gen_usph_vecs_mp
 
 plt.ioff()
 
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     main_dir = Path(os.getcwd())
 
     n_cpus = 7
-    n_vecs = int(1e5)
+    n_vecs = int(1e2)
 
     os.chdir(main_dir)
 
@@ -41,12 +41,14 @@ if __name__ == '__main__':
     rand_pts_2 = np.random.random(size=(100, 2))
     chull_pts = rand_pts  # s[depth_ftn_mp(rand_pts, rand_pts, unit_vecs, n_cpus) == 1]
 
-    depths = depth_ftn_mp(chull_pts, chull_pts, unit_vecs, n_cpus)
+#     depths = depth_ftn_mp(chull_pts, chull_pts, unit_vecs, n_cpus)
+#
+#     corner_pts = chull_pts[depths == 1, :]
+#
+#     plt.scatter(chull_pts[:, 0], chull_pts[:, 1], label='chull')
+#     plt.scatter(corner_pts[:, 0], corner_pts[:, 1], label='rands (d==1)', alpha=0.7)
+    plt.scatter(unit_vecs[:, 0], unit_vecs[:, 1], alpha=0.7)
 
-    corner_pts = chull_pts[depths == 1, :]
-
-    plt.scatter(chull_pts[:, 0], chull_pts[:, 1], label='chull')
-    plt.scatter(corner_pts[:, 0], corner_pts[:, 1], label='rands (d==1)', alpha=0.7)
     plt.legend(framealpha=0.5)
     plt.grid()
 
