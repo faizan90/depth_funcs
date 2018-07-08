@@ -8,6 +8,7 @@ Average performance: O(n log(n))
 Worst case space complexity: O(n)
 
 */
+#pragma once
 
 typedef double DT_D;
 typedef long long DT_UL;

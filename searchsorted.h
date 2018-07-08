@@ -1,10 +1,11 @@
 //#include <stdio.h>
+#pragma once
 
 typedef double DT_D;
 typedef long long DT_UL;
 
 
-DT_UL searchsorted(const DT_D arr[], const DT_D value, const DT_UL arr_size) {
+DT_UL searchsorted(const DT_D *arr, const DT_D value, const DT_UL arr_size) {
 	// arr must be sorted
 	DT_UL first = 0, last = arr_size - 1, curr_idx;
 

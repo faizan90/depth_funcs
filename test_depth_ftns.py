@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 np.set_printoptions(precision=3,
                     threshold=2000,
@@ -29,13 +30,13 @@ if __name__ == '__main__':
 
     main_dir = Path(os.getcwd())
 
-    n_dims = 7
-    n_vecs = int(1e5)
+    n_dims = 2
+    n_vecs = int(1e4)
     n_cpus = 7
 
     rand_min = -3
     rand_max = +3
-    n_rand_pts = int(1e6)
+    n_rand_pts = int(1e4)
 
     plot_depths_hist_flag = False
 
@@ -69,6 +70,10 @@ if __name__ == '__main__':
     print('%d out of %d unit vectors have lengths greater than 1!' %
           (idxs.sum(), int(n_vecs)))
 
+#     plt.scatter(usph_vecs[:, 0], usph_vecs[:, 1], alpha=0.01)
+#     plt.show(block=True)
+#     raise Exception
+
     print('\nHistograms of each dimension...')
     for i in range(n_dims):
         print('Dimension no:', i + 1)
@@ -85,6 +90,8 @@ if __name__ == '__main__':
         print('Depth of point %s in %d random points: %d (%s)' %
               (str(test_pts[i]), n_rand_pts, depth_cy[i], test_pts_msgs[i]))
 
+    time.sleep(2)
+    raise Exception
     _idxs = (rand_pts[:, 0] > (rand_min + 1))
     depth_cy = depth_ftn_mp(rand_pts, rand_pts[_idxs, :], usph_vecs, n_cpus)
     print('Points with depths of 0:', depth_cy[depth_cy == 0].sum())
