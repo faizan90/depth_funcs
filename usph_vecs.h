@@ -122,4 +122,5 @@ void gen_usph_vecs_norm_dist_c(
 			rn_ct_arr[tid] = 0.0;
 		}
 	}
+	return;
 }

@@ -28,9 +28,11 @@ void depth_ftn_c(
 
 	#pragma omp parallel for schedule(dynamic)
 	for (i = 0; i < n_uvecs; ++i) {
+
 		size_t j, k;
 		double *uvec, *sdot_ref, *sdot_test, *sdot_test_sort;
 		long long *stemp_mins, *smins, _idx;
+		double stest_med;
 
 		tid = omp_get_thread_num();
 
@@ -49,7 +51,8 @@ void depth_ftn_c(
 		for (j = 0; j < n_test; ++j) {
 			sdot_test[j] = 0.0;
 			for (k = 0; k < n_dims; ++k) {
-				sdot_test[j] = sdot_test[j] + (uvec[k] * test[(j * n_dims) + k]);
+				sdot_test[j] = sdot_test[j] + (
+						uvec[k] * test[(j * n_dims) + k]);
 			}
 			sdot_test_sort[j] = sdot_test[j];
 		}
@@ -57,10 +60,9 @@ void depth_ftn_c(
 		quick_sort(&sdot_ref[0], 0, n_ref - 1);
 		quick_sort(&sdot_test_sort[0], 0, n_test - 1);
 
-		double stest_med;
 		if ((n_test % 2) == 0) {
 			stest_med = 0.5 * (sdot_test_sort[n_test / 2] +
-						 	   sdot_test_sort[(n_test / 2) - 1]);
+							   sdot_test_sort[(n_test / 2) - 1]);
 		}
 
 		else {
@@ -68,7 +70,8 @@ void depth_ftn_c(
 		}
 
 		for (j = 0; j < n_test; ++j) {
-			sdot_test[j] = ((sdot_test[j] - stest_med) * _inc_mult) + stest_med;
+			sdot_test[j] = (
+					(sdot_test[j] - stest_med) * _inc_mult) + stest_med;
 		}
 
 		smins = &mins[tid * n_test];

@@ -1,13 +1,10 @@
 //#include <stdio.h>
 #pragma once
 
-typedef double DT_D;
-typedef long long DT_UL;
 
-
-DT_UL searchsorted(const DT_D *arr, const DT_D value, const DT_UL arr_size) {
+long long searchsorted(const double *arr, const double value, const long long arr_size) {
 	// arr must be sorted
-	DT_UL first = 0, last = arr_size - 1, curr_idx;
+	long long first = 0, last = arr_size - 1, curr_idx;
 
 	if (value <= arr[0]) {
 		return 0;
@@ -18,7 +15,7 @@ DT_UL searchsorted(const DT_D *arr, const DT_D value, const DT_UL arr_size) {
 	}
 
 	while (first <= last) {
-		curr_idx = (DT_UL) (0.5 * (first + last));
+		curr_idx = (long long) (0.5 * (first + last));
 		if ((value > arr[curr_idx]) && (value <= arr[curr_idx + 1])) {
 			return curr_idx + 1;
 		}
@@ -35,9 +32,6 @@ DT_UL searchsorted(const DT_D *arr, const DT_D value, const DT_UL arr_size) {
 			//printf("%d, %d, %d, %f\n", first, last, curr_idx, value);
 			return curr_idx;
 		}
-
 	}
-
 	return 0;
-
 }
