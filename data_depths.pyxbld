@@ -6,9 +6,14 @@ mod_dir = os.path.dirname(__file__)
 
 def make_ext(modname, pyxfilename):
     from distutils.extension import Extension
+    from faizpy import get_nvcc_paths
+    nvcc_exe, nvcc_inc, nvcc_lib = get_nvcc_paths()
+
     return Extension(name=modname,
                      sources=[pyxfilename],
                      language='c++',
-                     extra_compile_args=[r"/openmp", r"/Ox"],
+                     extra_compile_args=['/openmp', r"/Ox", '/MT'],
                      extra_link_args=[],
-                     include_dirs=[get_include(), mod_dir])
+					 libraries=['cudart', 'data_depths_cftns'],
+					 library_dirs=[nvcc_lib],
+                     include_dirs=[get_include(), mod_dir, nvcc_inc])

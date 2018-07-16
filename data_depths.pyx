@@ -18,16 +18,16 @@ DT_LL_NP = np.int64
 
 cdef extern from "./quick_sort.h" nogil:
     cdef:
-        void quick_sort(DT_D *arr, DT_UL first_index, DT_UL last_index)
+        void quick_sort_f64(DT_D *arr, DT_UL first_index, DT_UL last_index)
 
 
 cdef extern from "./searchsorted.h" nogil:
     cdef:
-        DT_UL searchsorted(DT_D *arr, DT_D value, DT_UL arr_size)
+        DT_UL searchsorted_f64(DT_D *arr, DT_D value, DT_UL arr_size)
 
-cdef extern from "data_depths.h" nogil:
+cdef extern from "data_depths_cftns.h" nogil:
     cdef:
-        void depth_ftn_c(
+        void depth_ftn_c_f64(
             const double *ref,
             const double *test,
             const double *uvecs,
@@ -42,20 +42,53 @@ cdef extern from "data_depths.h" nogil:
             const long n_dims,
             const long n_cpus)
 
+        void depth_ftn_c_f32(
+            const float *ref,
+            const float *test,
+            const float *uvecs,
+                  float *dot_ref,
+                  float *dot_test,
+                  float *dot_test_sort,
+                  long *temp_mins,
+                  long *mins,
+            const long n_ref,
+            const long n_test,
+            const long n_uvecs,
+            const long n_dims,
+            const long n_cpus)
+
+        void depth_ftn_c_gf32(
+            const float *ref,
+            const float *test,
+            const float *uvecs,
+                  long *depths,
+            const long n_ref,
+            const long n_test,
+            const long n_uvecs,
+            const long n_dims)
+
 
 cpdef np.ndarray depth_ftn_mp(
-    const DT_D[:, :] ref, 
-    const DT_D[:, :] test, 
-    const DT_D[:, :] uvecs,
-          DT_UL n_cpus=1) except +:
+    const DT_D[:, ::1] ref, 
+    const DT_D[:, ::1] test, 
+    const DT_D[:, ::1] uvecs,
+          long n_cpus=1) except +:
 
     cdef:
         Py_ssize_t i, j, k
-        DT_UL n_mins, n_uvecs, tid, _idx, n_x, n_dims
-        DT_D dy_med, _inc_mult = (1 - (1e-7))
+        long n_mins, n_uvecs, n_ref, n_dims
 
-        DT_UL[:, ::1] mins, numl
-        DT_D[:, ::1] ds, dys, dy_sort
+        DT_UL depth_type = 1
+
+        double[:, ::1] ref_f64, test_f64, uvecs_f64
+        long long[:, ::1] mins_f64, temp_mins_f64
+        double[:, ::1] dot_ref_f64, dot_test_f64, dot_test_sort_f64
+
+        float[:, ::1] ref_f32, test_f32, uvecs_f32
+        long[:, ::1] mins_f32, temp_mins_f32
+        float[:, ::1] dot_ref_f32, dot_test_f32, dot_test_sort_f32
+
+        long[::1] gdepths_f32
 
     assert ref.shape[0] and ref.shape[1], 'No values in ref!'
     assert test.shape[0] and ref.shape[1], 'No values in test!'
@@ -64,81 +97,107 @@ cpdef np.ndarray depth_ftn_mp(
         'Unequal ref, test and uvecs dimensions!')
     assert n_cpus > 0, 'n_cpus should be more than 0!'
 
-    n_x = ref.shape[0]
+    n_ref = ref.shape[0]
     n_mins = test.shape[0]
     n_uvecs = uvecs.shape[0]
     n_dims = uvecs.shape[1]
-    mins = np.full((n_cpus, n_mins), n_x, dtype=DT_LL_NP)
 
-    ds = np.zeros((n_cpus, n_x), dtype=DT_D_NP)
-    dys = np.zeros((n_cpus, n_mins), dtype=DT_D_NP)
-    dy_sort = dys.copy()
+    if depth_type == 0:
+        ref_f32 = ref.astype(np.float32)
+        test_f32 = test.astype(np.float32)
+        uvecs_f32 = uvecs.astype(np.float32)
 
-    numl = np.zeros((n_cpus, n_mins), dtype=DT_LL_NP)
+        mins_f32 = np.full((n_cpus, n_mins), n_ref, dtype=np.int32)
+        dot_ref_f32 = np.zeros((n_cpus, n_ref), dtype=np.float32)
+        dot_test_f32 = np.zeros((n_cpus, n_mins), dtype=np.float32)
+        dot_test_sort_f32 = dot_test_f32.copy()
 
-    depth_ftn_c(
-        &ref[0, 0],
-        &test[0, 0],
-        &uvecs[0, 0],
-        &ds[0, 0],
-        &dys[0, 0],
-        &dy_sort[0, 0],
-        &numl[0, 0],
-        &mins[0, 0],
-        n_x,
-        n_mins,
-        n_uvecs,
-        n_dims,
-        n_cpus)
+        temp_mins_f32 = np.zeros((n_cpus, n_mins), dtype=np.int32)
 
-#     for i in prange(n_uvecs,
-#                     schedule='dynamic',
-#                     nogil=True,
-#                     num_threads=n_cpus):
-#         tid = threadid()
-# 
-#         for j in range(n_x):
-#             ds[tid, j] = 0.0
-#             for k in range(n_dims):
-#                 ds[tid, j] = ds[tid, j] + (uvecs[i, k] * ref[j, k])
-#
-#         for j in range(n_mins):
-#             dys[tid, j] = 0.0
-#             for k in range(n_dims):
-#                 dys[tid, j] = dys[tid, j] + (uvecs[i, k] * test[j, k])
-#             dy_sort[tid, j] = dys[tid, j]
-# 
-#         quick_sort(&ds[tid, 0], <DT_UL> 0, <DT_UL> (n_x - 1))
-#         quick_sort(&dy_sort[tid, 0], <DT_UL> 0, <DT_UL> (n_mins - 1))
-#
-#         if (n_mins % 2) == 0:
-#             dy_med = (dy_sort[tid, <DT_UL> (n_mins / 2)] + 
-#                       dy_sort[tid, <DT_UL> ((n_mins / 2) - 1)]) / 2.0
-#         else:
-#             dy_med = dy_sort[tid, <DT_UL> (n_mins / 2)]
-# 
-#         for j in range(n_mins):
-#             dys[tid, j] = ((dys[tid, j] - dy_med) * _inc_mult) + dy_med
-# 
-#         for j in range(n_mins):
-#             if mins[tid, j] == 0:
-#                 continue
-# 
-#             numl[tid, j] = searchsorted(&ds[tid, 0], dys[tid, j], n_x)
-#  
-#         for j in range(n_mins):
-#             if mins[tid, j] == 0:
-#                 continue
-# 
-#             _idx = n_x - numl[tid, j]
-# 
-#             if _idx < numl[tid, j]:
-#                 numl[tid, j] = _idx
-# 
-#             if numl[tid, j] < mins[tid, j]:
-#                 mins[tid, j] = numl[tid, j]
+        depth_ftn_c_f32(
+            &ref_f32[0, 0],
+            &test_f32[0, 0],
+            &uvecs_f32[0, 0],
+            &dot_ref_f32[0, 0],
+            &dot_test_f32[0, 0],
+            &dot_test_sort_f32[0, 0],
+            &temp_mins_f32[0, 0],
+            &mins_f32[0, 0],
+            n_ref,
+            n_mins,
+            n_uvecs,
+            n_dims,
+            n_cpus)
+        return np.asarray(mins_f32).min(axis=0).astype(np.int32)
 
-    return np.asarray(mins).min(axis=0).astype(DT_UL_NP)
+    elif depth_type == 1:
+#         ref_f64 = ref.astype(np.float64)
+#         test_f64 = test.astype(np.float64)
+#         uvecs_f64 = uvecs.astype(np.float64)
+# 
+#         mins_f64 = np.full((n_cpus, n_mins), n_ref, dtype=DT_LL_NP)
+#         dot_ref_f64 = np.zeros((n_cpus, n_ref), dtype=DT_D_NP)
+#         dot_test_f64 = np.zeros((n_cpus, n_mins), dtype=DT_D_NP)
+#         dot_test_sort_f64 = dot_test_f64.copy()
+# 
+#         temp_mins_f64 = np.zeros((n_cpus, n_mins), dtype=DT_LL_NP)
+# 
+#         depth_ftn_c_f64(
+#             &ref_f64[0, 0],
+#             &test_f64[0, 0],
+#             &uvecs_f64[0, 0],
+#             &dot_ref_f64[0, 0],
+#             &dot_test_f64[0, 0],
+#             &dot_test_sort_f64[0, 0],
+#             &temp_mins_f64[0, 0],
+#             &mins_f64[0, 0],
+#             n_ref,
+#             n_mins,
+#             n_uvecs,
+#             n_dims,
+#             n_cpus)
+
+        mins_f64 = np.full((n_cpus, n_mins), n_ref, dtype=DT_LL_NP)
+        temp_mins_f64 = np.zeros((n_cpus, n_mins), dtype=DT_LL_NP)
+
+        dot_ref_f64 = np.zeros((n_cpus, n_ref), dtype=DT_D_NP)
+        dot_test_f64 = np.zeros((n_cpus, n_mins), dtype=DT_D_NP)
+        dot_test_sort_f64 = dot_test_f64.copy()
+ 
+        depth_ftn_c_f64(
+            &ref[0, 0],
+            &test[0, 0],
+            &uvecs[0, 0],
+            &dot_ref_f64[0, 0],
+            &dot_test_f64[0, 0],
+            &dot_test_sort_f64[0, 0],
+            &temp_mins_f64[0, 0],
+            &mins_f64[0, 0],
+            n_ref,
+            n_mins,
+            n_uvecs,
+            n_dims,
+            n_cpus)
+        return np.asarray(mins_f64).min(axis=0).astype(DT_UL_NP)
+
+    elif depth_type == 2:
+        ref_f32 = ref.astype(np.float32)
+        test_f32 = test.astype(np.float32)
+        uvecs_f32 = uvecs.astype(np.float32)
+
+        gdepths_f32 = np.full(n_mins, n_ref, dtype=np.int32)
+
+        depth_ftn_c_gf32(
+            &ref_f32[0, 0],
+            &test_f32[0, 0],
+            &uvecs_f32[0, 0],
+            &gdepths_f32[0],
+            n_ref,
+            n_mins,
+            n_uvecs,
+            n_dims)
+        [print(gdepths_f32[i]) for i in range(n_mins)]
+        return np.asarray(gdepths_f32).astype(np.int32)
 
 
 cpdef np.ndarray depth_ftn_mp_v2(
@@ -186,7 +245,7 @@ cpdef np.ndarray depth_ftn_mp_v2(
             for k in range(n_dims):
                 ds[tid, j] = ds[tid, j] + (uvecs[i, k] * ref[j, k])
 
-        quick_sort(&ds[tid, 0], <DT_UL> 0, <DT_UL> (n_x - 1))
+        quick_sort_f64(&ds[tid, 0], <DT_UL> 0, <DT_UL> (n_x - 1))
 
         for j in range(n_mins):
             if zero_d_arr[j]:
@@ -200,7 +259,7 @@ cpdef np.ndarray depth_ftn_mp_v2(
             if zero_d_arr[j]:
                 continue
 
-            numl[tid, j] = searchsorted(&ds[tid, 0], dys[tid, j], n_x)
+            numl[tid, j] = searchsorted_f64(&ds[tid, 0], dys[tid, j], n_x)
  
         for j in range(n_mins):
             if zero_d_arr[j]:

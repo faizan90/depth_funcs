@@ -30,8 +30,8 @@ warm_up()
 
 
 cpdef DT_D cmpt_rand_pts_chull_vol(
-    const DT_D[:, :] in_chull_pts,
-    const DT_D[:, :] uvecs,
+    const DT_D[:, ::1] in_chull_pts,
+    const DT_D[:, ::1] uvecs,
           DT_UL chk_iter,
           DT_UL max_iters, 
           DT_UL n_cpus=1,
