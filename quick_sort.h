@@ -16,11 +16,11 @@ void quick_sort_f64(
 		long long first_index,
 		long long last_index) {
 
-	// declaring index variables
 	long long pivotIndex, index_a, index_b;
 	double temp;
 
 	if (first_index < last_index) {
+
 		// assigning first element index as pivot element
 		pivotIndex = first_index;
 		index_a = first_index;
@@ -28,9 +28,13 @@ void quick_sort_f64(
 
 		// Sorting in Ascending order with quick sort
 		while (index_a < index_b) {
-			while (arr[index_a] <= arr[pivotIndex] && index_a < last_index) {
+
+			while ((arr[index_a] <= arr[pivotIndex]) &&
+				   (index_a < last_index)) {
+
 				index_a++;
 			}
+
 			while (arr[index_b] > arr[pivotIndex]) {
 				index_b--;
 			}
@@ -48,12 +52,12 @@ void quick_sort_f64(
 		arr[pivotIndex] = arr[index_b];
 		arr[index_b] = temp;
 
-		// Recursive call for quick sort, with partitioning
 		quick_sort_f64(arr, first_index, index_b - 1);
 		quick_sort_f64(arr, index_b + 1, last_index);
 	}
 	return;
 }
+
 
 void quick_sort_f32(
 		float *arr,

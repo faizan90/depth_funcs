@@ -16,16 +16,16 @@ np.set_printoptions(precision=3,
                     linewidth=200000,
                     formatter={'float': '{:+0.3f}'.format})
 
-compile_cuda_flag = False
-# compile_cuda_flag = True
-
-if compile_cuda_flag:
-    from faizpy import create_cuda_lib_files
-    create_cuda_lib_files(['data_depths_cftns'])
+# compile_cuda_flag = False
+# # compile_cuda_flag = True
+#
+# if compile_cuda_flag:
+#     from faizpy import create_cuda_lib_files
+#     create_cuda_lib_files(['data_depths_cftns'])
 
 # raise Exception
-import pyximport
-pyximport.install()
+# import pyximport
+# pyximport.install()
 
 from depth_funcs import (plot_depths_hist,
                          depth_ftn_py,
@@ -93,16 +93,26 @@ if __name__ == '__main__':
 
     print('#### Depth test ####')
     _beg = timeit.default_timer()
-    depth_cy = depth_ftn_mp(rand_pts, test_pts, usph_vecs, n_cpus)
+    depth_cy1 = depth_ftn_mp(rand_pts, test_pts, usph_vecs, n_cpus, 1)
     _end = timeit.default_timer()
     print(f'Took {_end - _beg: 0.4f} secs!')
 
     for i in range(test_pts.shape[0]):
         print('Depth of point %s in %d random points: %d (%s)' %
-              (str(test_pts[i]), n_rand_pts, depth_cy[i], test_pts_msgs[i]))
+              (str(test_pts[i]), n_rand_pts, depth_cy1[i], test_pts_msgs[i]))
 
-#     time.sleep(1)
-#     raise Exception
+    print('#### Depth test ####')
+    _beg = timeit.default_timer()
+    depth_cy3 = depth_ftn_mp(rand_pts, test_pts, usph_vecs, n_cpus, 3)
+    _end = timeit.default_timer()
+    print(f'Took {_end - _beg: 0.4f} secs!')
+
+    for i in range(test_pts.shape[0]):
+        print('Depth of point %s in %d random points: %d (%s)' %
+              (str(test_pts[i]), n_rand_pts, depth_cy3[i], test_pts_msgs[i]))
+
+    time.sleep(1)
+    raise Exception
 #     _idxs = (rand_pts[:, 0] > (rand_min + 1))
 #     depth_cy = depth_ftn_mp(rand_pts, rand_pts[_idxs, :], usph_vecs, n_cpus)
 #     print('Points with depths of 0:', depth_cy[depth_cy == 0].sum())

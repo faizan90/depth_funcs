@@ -8,7 +8,8 @@ cpdef np.ndarray depth_ftn_mp(
     const DT_D[:, ::1] ref, 
     const DT_D[:, ::1] test, 
     const DT_D[:, ::1] uvecs,
-          long n_cpus=?) except +
+          long n_cpus=?,
+          DT_UL depth_type=?) except +
 
 
 cpdef np.ndarray depth_ftn_mp_v2(
