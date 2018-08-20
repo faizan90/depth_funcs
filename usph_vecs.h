@@ -94,12 +94,13 @@ void gen_usph_vecs_norm_dist_c(
 
 	omp_set_num_threads(n_cpus);
 
-	#pragma omp parallel for private(j)
+	#pragma omp parallel for private(j, tid)
 	for (i = 0; i < n_vecs; ++i) {
 		tid = omp_get_thread_num();
 		double mag = 0.0;
 
 		double *usph_vec = &ndim_usph_vecs[i * n_dims];
+
 		for (j = 0; j < n_dims; ++j) {
 			usph_vec[j] = usph_norm_ppf_c(rand_c_mp(&seeds_arr[tid]));
 			mag = mag + pow(usph_vec[j], 2.0);
@@ -114,6 +115,7 @@ void gen_usph_vecs_norm_dist_c(
 		rn_ct_arr[tid] = rn_ct_arr[tid] + n_dims;
 		if ((rn_ct_arr[tid]  / re_seed_i) > 1) {
 			seeds_arr[tid] = (unsigned long long) (t0.tv_usec * (long) 937212);
+
 			for (j = 0; j < 1000; ++j) {
 				rand_c_mp(&seeds_arr[tid]);
 			}
