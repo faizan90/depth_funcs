@@ -68,7 +68,7 @@ void depth_ftn_c_f64(
 
 	long long i;
 
-	double _inc_mult = (double) (1 - (double) (1e-15));
+	double _inc_mult = (double) (1 - (double) (1e-10));
 
 	omp_set_num_threads(n_cpus);
 
@@ -172,7 +172,7 @@ void depth_ftn_c_f64_no_median(
 
 	long long i;
 
-	double _inc_mult = (double) (1 - (double) (1e-15));
+	double _inc_mult = (double) (1 - (double) (1e-10));
 
 	omp_set_num_threads(n_cpus);
 

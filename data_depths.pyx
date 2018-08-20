@@ -221,7 +221,7 @@ cpdef np.ndarray depth_ftn_mp_v2(
     cdef:
         Py_ssize_t i, j, k
         DT_UL n_mins, n_uvecs, tid, _idx, n_x, n_dims
-        DT_D dy_med, _inc_mult = (1 - (1e-15))
+        DT_D dy_med, _inc_mult = (1 - (1e-10))
 
         DT_UL[::1] zero_d_arr
         DT_UL[:, ::1] mins, numl
