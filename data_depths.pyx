@@ -156,7 +156,6 @@ cpdef np.ndarray depth_ftn_mp(
         dot_test_sort_f64 = dot_test_f64.copy()
         
         if depth_type == 1:
-            print('dt1')
 
             depth_ftn_c_f64(
                 &ref[0, 0],
@@ -173,7 +172,6 @@ cpdef np.ndarray depth_ftn_mp(
                 n_dims,
                 n_cpus)
         else:
-            print('dt3')
             depth_ftn_c_f64_no_median(
                 &ref[0, 0],
                 &test[0, 0],
