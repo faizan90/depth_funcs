@@ -38,9 +38,9 @@ if __name__ == '__main__':
 
     main_dir = Path(os.getcwd())
 
-    n_dims = 3
-    n_vecs = int(1e5)
-    n_cpus = 7
+    n_dims = 8
+    n_vecs = int(1e8)
+    n_cpus = 31
 
     rand_min = -3
     rand_max = +3
@@ -71,7 +71,11 @@ if __name__ == '__main__':
     assert test_pts.shape[0] == len(test_pts_msgs)
 
     print('#### Unit vector generation test ####')
+
+    _beg = timeit.default_timer()
     usph_vecs = gen_usph_vecs_mp(n_vecs, n_dims, n_cpus)
+    _end = timeit.default_timer()
+    print(f'Took {_end - _beg: 0.4f} secs!')
 
     mags = np.sqrt((usph_vecs ** 2).sum(axis=1))
     idxs = (mags > 1.000001)
@@ -80,7 +84,7 @@ if __name__ == '__main__':
 
 #     plt.scatter(usph_vecs[:, 0], usph_vecs[:, 1], alpha=0.01)
 #     plt.show(block=True)
-#     raise Exception
+    raise Exception
 
     print('\nHistograms of each dimension...')
     for i in range(n_dims):
