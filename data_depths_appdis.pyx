@@ -81,7 +81,6 @@ cpdef void cmpt_sorted_dot_prods_with_shrink(
 
         for j in range(n_pts):
             shdp[i, j] = ((shdp[i, j] - dy_med) * inc_mult) + dy_med
-
     return
 
 
@@ -122,7 +121,7 @@ cpdef np.ndarray get_sdp_depths(
         for j in range(n_test_pts):
             temp_depths[tid, j] = searchsorted_f64(
                 &sdp[i, 0], shdp[i, j], n_ref_pts)
- 
+
         for j in range(n_test_pts):
             dth = n_ref_pts - temp_depths[tid, j]
 
