@@ -210,9 +210,9 @@ cpdef np.ndarray depth_ftn_mp(
 
 
 cpdef np.ndarray depth_ftn_mp_v2(
-    const DT_D[:, :] ref, 
-    const DT_D[:, :] test, 
-    const DT_D[:, :] uvecs,
+    const DT_D[:, ::1] ref, 
+    const DT_D[:, ::1] test, 
+    const DT_D[:, ::1] uvecs,
           DT_UL n_cpus=1):
           
     '''Keep this one as a benchmark
@@ -223,7 +223,7 @@ cpdef np.ndarray depth_ftn_mp_v2(
         DT_UL n_mins, n_uvecs, tid, _idx, n_x, n_dims
         DT_D dy_med, _inc_mult = (1 - (1e-10))
 
-        DT_UL[::1] zero_d_arr
+#         DT_UL[::1] zero_d_arr
         DT_UL[:, ::1] mins, numl
         DT_D[:, ::1] ds, dys, dys_sort
 
@@ -239,7 +239,7 @@ cpdef np.ndarray depth_ftn_mp_v2(
     n_uvecs = uvecs.shape[0]
     n_dims = uvecs.shape[1]
     mins = np.full((n_cpus, n_mins), n_x, dtype=DT_LL_NP)
-    zero_d_arr = np.zeros(n_mins, dtype=DT_LL_NP)
+#     zero_d_arr = np.zeros(n_mins, dtype=DT_LL_NP)
 
     ds = np.zeros((n_cpus, n_x), dtype=DT_D_NP)
     dys = np.zeros((n_cpus, n_mins), dtype=DT_D_NP)
