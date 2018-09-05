@@ -21,12 +21,12 @@ def main():
     os.chdir(main_dir)
 
     n_dims = 5
-    n_vecs = int(5e4)
+    n_vecs = int(5e3)
     n_cpus = 7
 
     rand_min = -3
     rand_max = +3
-    n_rand_pts = int(1e4)
+    n_rand_pts = int(1e3)
 
     hide_pts = 10
 
@@ -68,6 +68,8 @@ def main():
     _end = timeit.default_timer()
     print(f'Took {_end - _beg: 0.4f} secs!')
 
+    sdp_depths[n_rand_pts - hide_pts:] = -1
+
     print('\n')
     print('#### Traditonal depth test ####')
     _beg = timeit.default_timer()
@@ -76,8 +78,32 @@ def main():
     _end = timeit.default_timer()
     print(f'Took {_end - _beg: 0.4f} secs!')
 
-    assert np.all(sdp_depths == tdl_depths)
+    assert np.all(sdp_depths[:-hide_pts] == tdl_depths)
 
+    peel_idxs = sdp_depths > 1
+
+    n_pld_pts = int(peel_idxs.sum())
+    psdp = sdp[:, peel_idxs].copy('c')
+    pshdp = shdp[:, peel_idxs].copy('c')
+
+    print('\n')
+    print('#### Peeled sorted dot product depth test ####')
+
+    _beg = timeit.default_timer()
+    psdp_depths = get_sodp_depths(
+        psdp, pshdp, n_pld_pts, n_pld_pts, n_cpus)
+    _end = timeit.default_timer()
+    print(f'Took {_end - _beg: 0.4f} secs!')
+
+    print('\n')
+    print('#### Peeled traditonal depth test ####')
+    _beg = timeit.default_timer()
+    ptdl_depths = get_depths(
+        rand_pts[peel_idxs].copy('c'), rand_pts[peel_idxs].copy('c'), usph_vecs, n_cpus)
+    _end = timeit.default_timer()
+    print(f'Took {_end - _beg: 0.4f} secs!')
+
+    assert np.all(psdp_depths == ptdl_depths)
     return
 
 

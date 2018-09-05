@@ -39,7 +39,7 @@ cpdef void cmpt_sorted_dot_prods_with_shrink(
     # shdp = shrinked dot product
 
     cdef:
-        Py_ssize_t i, j, k, tid
+        Py_ssize_t i, j, k
 
         DT_UL n_dims = data.shape[1]
         DT_UL n_uvecs = uvecs.shape[0]
@@ -62,8 +62,6 @@ cpdef void cmpt_sorted_dot_prods_with_shrink(
     for i in prange(
         n_uvecs, schedule='dynamic', nogil=True, num_threads=n_cpus):
 
-        tid = threadid()
-
         for j in range(n_pts):
             shdp[i, j] = 0.0
 
@@ -75,10 +73,10 @@ cpdef void cmpt_sorted_dot_prods_with_shrink(
         quick_sort_f64(&sodp[i, 0], <DT_UL> 0, <DT_UL> (n_pts - 1))
 
         if (n_pts % 2) == 0:
-            dy_med = 0.5 * (sodp[tid, n_pts / 2] + sodp[tid, (n_pts / 2) - 1])
+            dy_med = 0.5 * (sodp[i, n_pts / 2] + sodp[i, (n_pts / 2) - 1])
 
         else:
-            dy_med = sodp[tid, n_pts / 2]
+            dy_med = sodp[i, n_pts / 2]
 
         for j in range(n_pts):
             shdp[i, j] = ((shdp[i, j] - dy_med) * inc_mult) + dy_med
