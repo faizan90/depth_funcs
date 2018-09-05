@@ -28,28 +28,29 @@ cdef extern from "./searchsorted.h" nogil:
 
 cpdef void cmpt_sorted_dot_prods_with_shrink(
         const DT_D[:, ::1] data,
-              DT_D[:, ::1] sdp,
+              DT_D[:, ::1] sodp,
               DT_D[:, ::1] shdp,
         const DT_D[:, ::1] uvecs,
+        const DT_UL n_pts,
               DT_UL n_cpus=1,
         ):
 
-    # sdp = sorted dot product
-    # shdp = shrinked sdp
+    # sodp = sorted dot product
+    # shdp = shrinked dot product
 
     cdef:
         Py_ssize_t i, j, k, tid
 
-        DT_UL n_pts = data.shape[0]
         DT_UL n_dims = data.shape[1]
         DT_UL n_uvecs = uvecs.shape[0]
 
         DT_D dy_med, inc_mult = (1 - (1e-10))
 
-    assert n_pts == sdp.shape[1]
-    assert n_pts == shdp.shape[1]
+    assert n_pts <= sodp.shape[1]
+    assert n_pts <= shdp.shape[1]
+    assert n_pts <= data.shape[0]
 
-    assert n_uvecs == sdp.shape[0]
+    assert n_uvecs == sodp.shape[0]
     assert n_uvecs == shdp.shape[0]
     assert n_dims == uvecs.shape[1]
 
@@ -69,37 +70,37 @@ cpdef void cmpt_sorted_dot_prods_with_shrink(
             for k in range(n_dims):
                 shdp[i, j] = shdp[i, j] + (uvecs[i, k] * data[j, k])
 
-            sdp[i, j] = shdp[i, j]
+            sodp[i, j] = shdp[i, j]
 
-        quick_sort_f64(&sdp[i, 0], <DT_UL> 0, <DT_UL> (n_pts - 1))
+        quick_sort_f64(&sodp[i, 0], <DT_UL> 0, <DT_UL> (n_pts - 1))
 
         if (n_pts % 2) == 0:
-            dy_med = 0.5 * (sdp[tid, n_pts / 2] + sdp[tid, (n_pts / 2) - 1])
+            dy_med = 0.5 * (sodp[tid, n_pts / 2] + sodp[tid, (n_pts / 2) - 1])
 
         else:
-            dy_med = sdp[tid, n_pts / 2]
+            dy_med = sodp[tid, n_pts / 2]
 
         for j in range(n_pts):
             shdp[i, j] = ((shdp[i, j] - dy_med) * inc_mult) + dy_med
     return
 
 
-cpdef np.ndarray get_sdp_depths(
-        const DT_D[:, ::1] sdp,
+cpdef np.ndarray get_sodp_depths(
+        const DT_D[:, ::1] sodp,
         const DT_D[:, ::1] shdp,
+        const DT_UL n_ref_pts,
+        const DT_UL n_test_pts,
               DT_UL n_cpus=1,
         ):
 
-    # sdp = sorted dot product
-    # shdp = shrinked sdp
+    # sodp = sorted dot product
+    # shdp = shrinked dot product
 
     cdef:
         Py_ssize_t i, j, tid
 
         DT_UL dth
-        DT_UL n_uvecs = sdp.shape[0]
-        DT_UL n_ref_pts = sdp.shape[1]
-        DT_UL n_test_pts = sdp.shape[1]
+        DT_UL n_uvecs = sodp.shape[0]
 
         DT_UL[:, ::1] depths, temp_depths
 
@@ -109,6 +110,9 @@ cpdef np.ndarray get_sdp_depths(
     assert n_test_pts > 1
     assert n_uvecs > 0
     assert n_cpus > 0
+
+    assert n_ref_pts <= sodp.shape[1]
+    assert n_test_pts <= shdp.shape[1]
 
     depths = np.full((n_cpus, n_test_pts), n_ref_pts, dtype=DT_LL_NP)
     temp_depths = np.empty((n_cpus, n_test_pts), dtype=DT_LL_NP)
@@ -120,7 +124,7 @@ cpdef np.ndarray get_sdp_depths(
 
         for j in range(n_test_pts):
             temp_depths[tid, j] = searchsorted_f64(
-                &sdp[i, 0], shdp[i, j], n_ref_pts)
+                &sodp[i, 0], shdp[i, j], n_ref_pts)
 
         for j in range(n_test_pts):
             dth = n_ref_pts - temp_depths[tid, j]

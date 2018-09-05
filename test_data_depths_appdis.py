@@ -12,7 +12,7 @@ import numpy as np
 
 from depth_funcs import (
     gen_usph_vecs_norm_dist_mp as get_uvecs,
-    cmpt_sorted_dot_prods_with_shrink, get_sdp_depths,
+    cmpt_sorted_dot_prods_with_shrink, get_sodp_depths,
     depth_ftn_mp_v2 as get_depths)
 
 
@@ -28,27 +28,13 @@ def main():
     rand_max = +3
     n_rand_pts = int(1e4)
 
+    hide_pts = 10
+
     os.chdir(main_dir)
 
+    assert hide_pts < n_rand_pts
     rand_pts = rand_min + ((rand_max - rand_min) *
                            np.random.random((n_rand_pts, n_dims)))
-
-    rand_pts[0] = rand_min
-    rand_pts[1] = rand_max
-
-    test_pts = np.array([[0.5 * (rand_max + rand_min)] * n_dims,
-                         rand_pts[0],
-                         rand_pts[1],
-                         [rand_min - 1] * n_dims,
-                         [rand_max + 1] * n_dims], dtype=float)
-
-    test_pts_msgs = ['should be close to %d' % int(0.5 * n_rand_pts),
-                     'should be 1',
-                     'should be 1',
-                     'should be 0',
-                     'should be 0']
-
-    assert test_pts.shape[0] == len(test_pts_msgs)
 
     print('#### Unit vector generation test ####')
 
@@ -68,7 +54,8 @@ def main():
     shdp = sdp.copy()
 
     _beg = timeit.default_timer()
-    cmpt_sorted_dot_prods_with_shrink(rand_pts, sdp, shdp, usph_vecs, n_cpus)
+    cmpt_sorted_dot_prods_with_shrink(
+        rand_pts, sdp, shdp, usph_vecs, n_rand_pts - hide_pts, n_cpus)
     _end = timeit.default_timer()
     print(f'Took {_end - _beg: 0.4f} secs!')
 
@@ -76,14 +63,16 @@ def main():
     print('#### Sorted dot product depth test ####')
 
     _beg = timeit.default_timer()
-    sdp_depths = get_sdp_depths(sdp, shdp, n_cpus)
+    sdp_depths = get_sodp_depths(
+        sdp, shdp, n_rand_pts - hide_pts, n_rand_pts - hide_pts, n_cpus)
     _end = timeit.default_timer()
     print(f'Took {_end - _beg: 0.4f} secs!')
 
     print('\n')
     print('#### Traditonal depth test ####')
     _beg = timeit.default_timer()
-    tdl_depths = get_depths(rand_pts, rand_pts, usph_vecs, n_cpus)
+    tdl_depths = get_depths(
+        rand_pts[:-hide_pts], rand_pts[:-hide_pts], usph_vecs, n_cpus)
     _end = timeit.default_timer()
     print(f'Took {_end - _beg: 0.4f} secs!')
 
