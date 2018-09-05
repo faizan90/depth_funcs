@@ -96,6 +96,9 @@ cpdef np.ndarray get_sodp_depths(
     # sodp = sorted dot product
     # shdp = shrinked dot product
 
+    # be careful not to take points that are at indicies greater than
+    # n_test_pts
+
     cdef:
         Py_ssize_t i, j, tid
 
@@ -114,8 +117,8 @@ cpdef np.ndarray get_sodp_depths(
     assert n_ref_pts <= sodp.shape[1]
     assert n_test_pts <= shdp.shape[1]
 
-    depths = np.full((n_cpus, n_test_pts), n_ref_pts, dtype=DT_LL_NP)
-    temp_depths = np.empty((n_cpus, n_test_pts), dtype=DT_LL_NP)
+    depths = np.full((n_cpus, sodp.shape[1]), n_ref_pts, dtype=DT_LL_NP)
+    temp_depths = np.empty((n_cpus, sodp.shape[1]), dtype=DT_LL_NP)
 
     for i in prange(
         n_uvecs, schedule='static', nogil=True, num_threads=n_cpus):
@@ -135,4 +138,5 @@ cpdef np.ndarray get_sodp_depths(
             if dth < depths[tid, j]:
                 depths[tid, j] = dth
 
+    # should be a signed array
     return np.asarray(depths).min(axis=0).astype(DT_LL_NP)
