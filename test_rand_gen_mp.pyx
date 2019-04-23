@@ -68,6 +68,19 @@ cpdef void gen_n_rands(DT_ULL n_rands):
     return 
 
 
+cpdef np.ndarray get_n_rands(DT_ULL n_rands):
+    cdef:
+        DT_ULL i
+        DT_D[::1] rnds_arr
+        
+    rnds_arr = np.zeros(n_rands, dtype=np.float64)
+     
+    for i in range(n_rands):
+        rnds_arr[i] = rand_c()
+         
+    return np.asarray(rnds_arr)
+
+
 cpdef void gen_n_rands_mp(DT_ULL n_rands):
     cdef:
         DT_ULL i, n_seeds = 1
