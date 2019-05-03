@@ -12,7 +12,7 @@ import numpy as np
 cimport numpy as np
 from cython.parallel import prange, threadid
 
-from .data_depths cimport depth_ftn_mp
+from .data_depths cimport depth_ftn_mp_v2
 
 DT_D_NP = np.float64
 DT_UL_NP = np.uint64
@@ -43,8 +43,9 @@ cpdef DT_D cmpt_rand_pts_chull_vol(
         DT_UL n_in_pts, n_dims, iter_ct, re_seed_i = <DT_UL> 1e6
         DT_ULL n_inside_pts, n_outside_pts, n_tot_pts
         DT_D pre_rel, curr_rel, curr_vol = np.nan, tot_vol, rn_ct = 0.0
+#         DT_ULL le_rnd_ct = 0, ge_rnd_ct = 0
 
-        DT_ULL[::1] depths_arr
+        long long[::1] depths_arr
         DT_D[::1] diffs_arr
         DT_D[:, ::1] crds_min_max_arr, rand_pts_arr
 
@@ -58,6 +59,17 @@ cpdef DT_D cmpt_rand_pts_chull_vol(
     assert max_iters > 0, 'max_iters should be more than 0!'
     assert n_cpus > 0, 'n_cpus should be greater than 0!'
     assert 0 < vol_tol < 1, 'vol_tol should be in between 0 and 1!'
+    
+#     for i in range(int(1e8)):
+#         if rand_c() < 0.5:
+#             le_rnd_ct += 1
+#         
+#         else:
+#             ge_rnd_ct += 1
+#     
+#     print('le_rnd_ct, ge_rnd_ct: ', le_rnd_ct, ge_rnd_ct)
+#     print('le_rnd_ct / ge_rnd_ct: ', (le_rnd_ct / <DT_D> ge_rnd_ct))
+#     return 0.0
 
     n_in_pts = in_chull_pts.shape[0]
     n_dims = in_chull_pts.shape[1]
@@ -76,6 +88,7 @@ cpdef DT_D cmpt_rand_pts_chull_vol(
     iter_ct = 0
     n_inside_pts = 0
     n_outside_pts = 0
+    n_bd_pts = 0
     n_tot_pts = 0
     pre_rel = 1
     curr_rel = 0
@@ -91,29 +104,40 @@ cpdef DT_D cmpt_rand_pts_chull_vol(
         rn_ct += (chk_iter * n_dims)
 
         depths_arr = np.asarray(
-            depth_ftn_mp(in_chull_pts, rand_pts_arr, uvecs, n_cpus))
+            depth_ftn_mp_v2(in_chull_pts, rand_pts_arr, uvecs, n_cpus))
 
         for i in range(chk_iter):
             if depths_arr[i] == 0:
                 n_outside_pts += 1
-            else:
+
+            elif depths_arr[i] >= 1:
                 n_inside_pts += 1
+            
+            elif depths_arr[i] < 0:
+                print('depth less than zero!')
+
+            if depths_arr[i] == 1:
+                n_bd_pts += 1
+            
             n_tot_pts += 1
 
         if n_tot_pts and n_outside_pts: 
             curr_vol = n_inside_pts / (<DT_D> n_tot_pts)
             curr_rel = n_inside_pts / (<DT_D> n_outside_pts)
+
             if ((abs(curr_rel - pre_rel) / pre_rel) < vol_tol) and (iter_ct >= 0):
+                print('reached vol_tol!')
                 break
 
             print('curr_vol:', curr_vol,
                   'n_inside_pts:', n_inside_pts,
                   'n_outside_pts:', n_outside_pts,
                   'n_tot_pts:', n_tot_pts,
-                  'curr_rel:', curr_rel)
+                  'curr_rel:', curr_rel,
+                  'n_bd_pts:', n_bd_pts)
             pre_rel = curr_rel
         iter_ct += 1
-        break
+#         break
 
     tot_vol = curr_vol
     for i in range(n_dims):

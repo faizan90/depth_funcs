@@ -12,7 +12,7 @@ from itertools import product
 import numpy as np
 from scipy.spatial import ConvexHull
 
-from depth_funcs import cmpt_rand_pts_chull_vol, gen_usph_vecs_mp, depth_ftn_mp
+from depth_funcs import cmpt_rand_pts_chull_vol, gen_usph_vecs_mp, depth_ftn_mp, depth_ftn_mp_v2
 
 if __name__ == '__main__':
     _save_log_ = False
@@ -33,18 +33,30 @@ if __name__ == '__main__':
     main_dir = Path(os.getcwd())
 
     n_cpus = 7
-    n_unit_vecs = int(1e5)
-    n_dims = 2
+    n_unit_vecs = int(1e4)
+    n_dims = 3
     chk_iter = int(1e4)
-    max_iters = 100
-    vol_tol = 0.01
+    max_iters = 10
+    vol_tol = 0.0001
 
     os.chdir(main_dir)
 
 #     chull_arr = np.array(list(product(*[[1.0111, 1.0]] * n_dims)), dtype=float)
 
     # 2D wedge
-    chull_arr = np.array([[-1, -1], [1, -1], [1, 1]], dtype=float)
+#     chull_arr = np.array([[-1, -1], [1, -1], [1, 1]], dtype=float)
+
+    # 3D cube of unit volume
+    chull_arr = 0.5 * np.array([
+        [-1, -1, -1],
+#         [-1, -1, 1],
+        [-1, 1, -1],
+        [-1, 1, 1],
+        [1, -1, -1],
+        [1, -1, 1],
+        [1, 1, -1],
+        [1, 1, 1],
+        ], dtype=float)
 
     # 3D wedge
 #     chull_arr = np.array([[0, 0, 0], [1, 0, 1], [1, 0, 0], [1, 1, 0], [0, 0, 1], [1, 1, 1]], dtype=float)
