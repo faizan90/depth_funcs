@@ -11,10 +11,7 @@ Worst case space complexity: O(n)
 #pragma once
 
 
-void quick_sort_f64(
-		double *arr,
-		long long first_index,
-		long long last_index) {
+void quick_sort_f64(double *arr, long long first_index, long long last_index) {
 
 	long long pivotIndex, index_a, index_b;
 	double temp;
@@ -47,7 +44,8 @@ void quick_sort_f64(
 			}
 		}
 
-		// At the end of first iteration, swap pivot element with index_b element
+		// At the end of first iteration,
+		// swap pivot element with index_b element
 		temp = arr[pivotIndex];
 		arr[pivotIndex] = arr[index_b];
 		arr[index_b] = temp;
@@ -59,10 +57,7 @@ void quick_sort_f64(
 }
 
 
-void quick_sort_f32(
-		float *arr,
-		long first_index,
-		long last_index) {
+void quick_sort_f32(float *arr, long first_index, long last_index) {
 
 	// declaring index variables
 	long pivotIndex, index_a, index_b;
@@ -91,7 +86,8 @@ void quick_sort_f32(
 			}
 		}
 
-		// At the end of first iteration, swap pivot element with index_b element
+		// At the end of first iteration,
+		// swap pivot element with index_b element
 		temp = arr[pivotIndex];
 		arr[pivotIndex] = arr[index_b];
 		arr[index_b] = temp;

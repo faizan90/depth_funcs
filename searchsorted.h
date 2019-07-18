@@ -37,6 +37,7 @@ long long searchsorted_f64(
 			return curr_idx;
 		}
 	}
+
 	return 0;
 }
 
@@ -96,6 +97,7 @@ long long searchsorted_f64_with_tol(
 			return curr_idx;
 		}
 	}
+
 	return 0;
 }
 
@@ -135,5 +137,6 @@ long searchsorted_f32(
 			return curr_idx;
 		}
 	}
+
 	return 0;
 }

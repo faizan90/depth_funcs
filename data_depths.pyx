@@ -85,11 +85,11 @@ cdef extern from "data_depths_cftns.h" nogil:
 
 
 cpdef np.ndarray depth_ftn_mp(
-    const DT_D[:, ::1] ref, 
-    const DT_D[:, ::1] test, 
-    const DT_D[:, ::1] uvecs,
-          long n_cpus=1,
-          DT_UL depth_type=1) except +:
+        const DT_D[:, ::1] ref, 
+        const DT_D[:, ::1] test, 
+        const DT_D[:, ::1] uvecs,
+              long n_cpus=1,
+              DT_UL depth_type=1) except +:
 
     cdef:
         Py_ssize_t i, j, k
@@ -210,10 +210,10 @@ cpdef np.ndarray depth_ftn_mp(
 
 
 cpdef np.ndarray depth_ftn_mp_v2(
-    const DT_D[:, ::1] ref, 
-    const DT_D[:, ::1] test, 
-    const DT_D[:, ::1] uvecs,
-          DT_UL n_cpus=1):
+        const DT_D[:, ::1] ref, 
+        const DT_D[:, ::1] test, 
+        const DT_D[:, ::1] uvecs,
+              DT_UL n_cpus=1):
           
     '''Keep this one as a benchmark
     '''
@@ -247,10 +247,8 @@ cpdef np.ndarray depth_ftn_mp_v2(
 
     numl = np.zeros((n_cpus, n_mins), dtype=DT_LL_NP)
 
-    for i in prange(n_uvecs,
-                    schedule='dynamic',
-                    nogil=True,
-                    num_threads=n_cpus):
+    for i in prange(
+        n_uvecs, schedule='dynamic', nogil=True, num_threads=n_cpus):
 
         tid = threadid()
 
@@ -272,7 +270,8 @@ cpdef np.ndarray depth_ftn_mp_v2(
         quick_sort_f64(&dys_sort[tid, 0], <DT_UL> 0, <DT_UL> (n_mins - 1))
 
         if (n_mins % 2) == 0:
-            dy_med = 0.5 * (dys_sort[tid, n_mins / 2] + dys_sort[tid, (n_mins / 2) - 1])
+            dy_med = 0.5 * (
+                dys_sort[tid, n_mins / 2] + dys_sort[tid, (n_mins / 2) - 1])
 
         else:
             dy_med = dys_sort[tid, n_mins / 2]
