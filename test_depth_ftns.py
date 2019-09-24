@@ -39,8 +39,8 @@ if __name__ == '__main__':
     main_dir = Path(os.getcwd())
 
     n_dims = 8
-    n_vecs = int(1e8)
-    n_cpus = 31
+    n_vecs = int(1e4)
+    n_cpus = 7
 
     rand_min = -3
     rand_max = +3
@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
 #     plt.scatter(usph_vecs[:, 0], usph_vecs[:, 1], alpha=0.01)
 #     plt.show(block=True)
-    raise Exception
+#     raise Exception
 
     print('\nHistograms of each dimension...')
     for i in range(n_dims):
@@ -116,7 +116,7 @@ if __name__ == '__main__':
               (str(test_pts[i]), n_rand_pts, depth_cy3[i], test_pts_msgs[i]))
 
     time.sleep(1)
-    raise Exception
+#     raise Exception
 #     _idxs = (rand_pts[:, 0] > (rand_min + 1))
 #     depth_cy = depth_ftn_mp(rand_pts, rand_pts[_idxs, :], usph_vecs, n_cpus)
 #     print('Points with depths of 0:', depth_cy[depth_cy == 0].sum())
