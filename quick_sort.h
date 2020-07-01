@@ -7,63 +7,89 @@ Best case performance: O(n)
 Average performance: O(n log(n))
 Worst case space complexity: O(n)
 
+NOTE: The older algorithm is only good for a sequence that is randomly shuffled.
+For cases such as all values similar and sorted or reverse sorted arrays, it
+takes forever. The newe Hoar algorithm performs better on sorted or similar
+arrays. Takes a bit more time than numpy.
+
 */
+
 #pragma once
 
 
 void quick_sort_f64(double *arr, long long first_index, long long last_index) {
 
-	unsigned long long pivotIndex, index_a, index_b;
-	double temp;
+	// Hoare Impl at:
+	// https://stackoverflow.com/questions/33837737/quick-sort-middle-pivot-implementation-strange-behaviour
 
-	int i;
+	if (first_index >= last_index) return;
 
-	if (first_index < last_index) {
+    double pivot = arr[first_index + ((last_index - first_index) / 2)];
 
-		// assigning first element index as pivot element
-		pivotIndex = first_index;
-		index_a = first_index;
-		index_b = last_index;
-		i = 0;
+    int index_a = first_index - 1;
 
-		// Sorting in Ascending order with quick sort
-		while (index_a < index_b) {
+    int index_b = last_index + 1;
 
-			while ((arr[index_a] <= arr[pivotIndex]) &&
-				   (index_a < last_index)) {
+    double temp;
 
-				index_a++;
-				i = 1;
-			}
+    while (1) {
 
-			while (arr[index_b] > arr[pivotIndex]) {
-				index_b--;
-				i = 1;
-			}
+    	while(arr[++index_a] < pivot);
 
-			if (index_a < index_b) {
-			// Swapping operation
-				temp = arr[index_a];
-				arr[index_a] = arr[index_b];
-				arr[index_b] = temp;
-			}
+        while(arr[--index_b] > pivot);
 
-			if (i == 0) {
-				break;
-			}
+        if (index_a >= index_b) break;
 
-			i = 0;
-		}
+        temp = arr[index_a];
+        arr[index_a] = arr[index_b];
+        arr[index_b] = temp;
+    }
 
-		// At the end of first iteration,
-		// swap pivot element with index_b element
-		temp = arr[pivotIndex];
-		arr[pivotIndex] = arr[index_b];
-		arr[index_b] = temp;
+    quick_sort_f64(arr, first_index, index_b);
+    quick_sort_f64(arr, index_b+1, last_index);
 
-		quick_sort_f64(arr, first_index, index_b - 1);
-		quick_sort_f64(arr, index_b + 1, last_index);
-	}
+    // Older implementation
+//	long long pivotIndex, index_a, index_b;
+//	double temp;
+//
+//	if (first_index < last_index) {
+//
+//		// assigning first element index as pivot element
+//		pivotIndex = first_index + ((last_index - first_index) / 2);
+//		index_a = first_index;
+//		index_b = last_index;
+//
+//		// Sorting in Ascending order with quick sort
+//		while (index_a < index_b) {
+//
+//			while ((arr[index_a] <= arr[pivotIndex]) &&
+//				   (index_a < last_index)) {
+//
+//				index_a++;
+//			}
+//
+//			while (arr[index_b] > arr[pivotIndex]) {
+//				index_b--;
+//			}
+//
+//			if (index_a < index_b) {
+//			// Swapping operation
+//				temp = arr[index_a];
+//				arr[index_a] = arr[index_b];
+//				arr[index_b] = temp;
+//			}
+//
+//		}
+//
+//		// At the end of first iteration,
+//		// swap pivot element with index_b element
+//		temp = arr[pivotIndex];
+//		arr[pivotIndex] = arr[index_b];
+//		arr[index_b] = temp;
+//
+//		quick_sort_f64(arr, first_index, index_b - 1);
+//		quick_sort_f64(arr, index_b + 1, last_index);
+//	}
 	return;
 }
 

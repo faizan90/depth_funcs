@@ -284,7 +284,7 @@ cpdef np.ndarray depth_ftn_mp_v2(
 #                 continue
 
             numl[tid, j] = searchsorted_f64(&ds[tid, 0], dys[tid, j], n_x)
- 
+
         for j in range(n_mins):
 #             if zero_d_arr[j]:
 #                 mins[tid, j] = 0
