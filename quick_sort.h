@@ -13,8 +13,10 @@ Worst case space complexity: O(n)
 
 void quick_sort_f64(double *arr, long long first_index, long long last_index) {
 
-	long long pivotIndex, index_a, index_b;
+	unsigned long long pivotIndex, index_a, index_b;
 	double temp;
+
+	int i;
 
 	if (first_index < last_index) {
 
@@ -22,6 +24,7 @@ void quick_sort_f64(double *arr, long long first_index, long long last_index) {
 		pivotIndex = first_index;
 		index_a = first_index;
 		index_b = last_index;
+		i = 0;
 
 		// Sorting in Ascending order with quick sort
 		while (index_a < index_b) {
@@ -30,10 +33,12 @@ void quick_sort_f64(double *arr, long long first_index, long long last_index) {
 				   (index_a < last_index)) {
 
 				index_a++;
+				i = 1;
 			}
 
 			while (arr[index_b] > arr[pivotIndex]) {
 				index_b--;
+				i = 1;
 			}
 
 			if (index_a < index_b) {
@@ -42,6 +47,12 @@ void quick_sort_f64(double *arr, long long first_index, long long last_index) {
 				arr[index_a] = arr[index_b];
 				arr[index_b] = temp;
 			}
+
+			if (i == 0) {
+				break;
+			}
+
+			i = 0;
 		}
 
 		// At the end of first iteration,

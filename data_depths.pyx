@@ -303,3 +303,10 @@ cpdef np.ndarray depth_ftn_mp_v2(
 #                     zero_d_arr[j] = 1
 
     return np.asarray(mins).min(axis=0).astype(DT_LL_NP)
+
+
+cpdef void sort_arr(DT_D[::1] in_arr):
+
+    quick_sort_f64(&in_arr[0], 0, in_arr.shape[0] - 1)
+    return
+

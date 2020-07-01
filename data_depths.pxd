@@ -25,3 +25,5 @@ cpdef np.ndarray depth_ftn_mp_v2(
     const DT_D[:, ::1] test, 
     const DT_D[:, ::1] uvecs,
           DT_UL n_cpus=?)
+
+cpdef void sort_arr(DT_D[::1] in_arr)
