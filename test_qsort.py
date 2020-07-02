@@ -26,21 +26,21 @@ def main():
     main_dir = Path(os.getcwd())
     os.chdir(main_dir)
 
-    n_vals = int(1e8)
-    n_iters = 1
+    n_vals = int(1e6)
+    n_iters = 10
 
     invld_ctr = 0
 
     i = 0
     while (i < n_iters):
 
-#         rand_vals_ref = ((200) * np.random.random(n_vals))
+        rand_vals_ref = -100 + ((200) * np.random.random(n_vals))
 #         rand_vals_ref = np.zeros(n_vals)
 
 #         rand_vals_ref = np.arange(n_vals).astype(np.float64)
 
-        rand_vals_ref = np.random.randint(
-            0, n_vals * 2, n_vals).astype(np.float64)
+#         rand_vals_ref = np.random.randint(
+#             0, n_vals * 2, n_vals).astype(np.float64)
 
         rand_vals_sim = rand_vals_ref.copy()
 
