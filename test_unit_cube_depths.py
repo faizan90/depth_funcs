@@ -30,6 +30,7 @@ def main():
     n_cpus = 7
     n_test_pts = 300
 
+    # 3D
     ucube_pts = np.array([
         [0, 0, 0, 0],
         [0, 0, 0, 1],
@@ -47,25 +48,50 @@ def main():
         [1, 1, 0, 1],
         [1, 1, 1, 0],
         [1, 1, 1, 1],
-        ], dtype=np.float64)
+        ], dtype=np.float64)[:2 ** 3, 1:].copy(order='c')
+
+#     # 4D
+#     ucube_pts = np.array([
+#         [0, 0, 0, 0],
+#         [0, 0, 0, 1],
+#         [0, 0, 1, 0],
+#         [0, 0, 1, 1],
+#         [0, 1, 0, 0],
+#         [0, 1, 0, 1],
+#         [0, 1, 1, 0],
+#         [0, 1, 1, 1],
+#         [1, 0, 0, 0],
+#         [1, 0, 0, 1],
+#         [1, 0, 1, 0],
+#         [1, 0, 1, 1],
+#         [1, 1, 0, 0],
+#         [1, 1, 0, 1],
+#         [1, 1, 1, 0],
+#         [1, 1, 1, 1],
+#         [1, 1, 1, 0.5],
+#         ], dtype=np.float64)
 
     n_dims = ucube_pts.shape[1]
+
+    print('n_dims:', n_dims)
 
 #     rand_pts = -0.1 + np.random.random(size=(n_test_pts, n_dims)) * 1.2
 #
 #     corr = 0.5
 #     rand_pts[:, 1] = (corr * rand_pts[:, 0]) + (((1 - corr ** 2) ** 0.5) * rand_pts[:, 1])
 
-    f1 = r"P:\Synchronize\IWS\Projects\2016_DFG_SPATE\data\bjoern\joint_var_events\joint_416.txt"
-    df1 = pd.read_csv(f1, sep=';', index_col=0)[['Vp2', 'Pmax2', 'sm_all', 'melt2']]
+#     f1 = r"P:\Synchronize\IWS\Projects\2016_DFG_SPATE\data\bjoern\joint_var_events\joint_416.txt"
+#     df1 = pd.read_csv(f1, sep=';', index_col=0)[['Vp2', 'Pmax2', 'sm_all', 'melt2']]
+#
+#     rand_pts = df1.values.copy(order='c')
 
-    rand_pts = df1.values.copy(order='c')
+    rand_pts = ucube_pts
 
     usph_vecs = gen_usph_vecs_mp(n_vecs, n_dims, n_cpus)
 
     depths = depth_ftn_mp(rand_pts, rand_pts, usph_vecs, n_cpus, 1)
 
-#     print(depths)
+    print(depths)
 
 #     for i in range(n_test_pts):
 #         print(rand_pts[i], depths[i])
