@@ -14,19 +14,27 @@ import traceback as tb
 from pathlib import Path
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from depth_funcs import (
     gen_usph_vecs_norm_dist_mp as gen_usph_vecs_mp,
     depth_ftn_mp)
 
+plt.ioff()
+
 DEBUG_FLAG = False
+
+
+def model(i, prms):
+
+    return (prms * i).sum()
 
 
 def obj_ftn(prms, ref_arr):
 
     sim_arr = np.empty_like(ref_arr)
     for i in range(sim_arr.shape[0]):
-        sim_arr[i] = (prms * i).sum()
+        sim_arr[i] = model(i, prms)
 
     obj_val = ((ref_arr - sim_arr) ** 2).sum()
 
@@ -39,18 +47,19 @@ def main():
     os.chdir(main_dir)
 
     n_dims = 3
-    n_vecs = int(1e4)
+    n_vecs = int(1e3)
     n_cpus = 8
 
-    n_rope_iters = 3
+    n_rope_iters = 5
     n_vecs_per_iter = int(1e2)
-    ref_arr = np.arange(100)
+    ref_arr = np.arange(50)
 
-    cnvx_hull_cntn_tries = 10
+    cnvx_hull_cntn_tries = 5
+    n_test_pts_per_try = int(1e4)
 
     ref_min = -3
     ref_max = +3
-    n_ref_pts = int(1e4)
+    n_ref_pts = int(1e3)
 
     ref_pts = ref_min + (
         (ref_max - ref_min) * np.random.random((n_ref_pts, n_dims)))
@@ -58,7 +67,7 @@ def main():
     usph_vecs = gen_usph_vecs_mp(n_vecs, n_dims, n_cpus)
 
     obj_vals = np.empty(ref_pts.shape[0])
-    for i in range(n_ref_pts):
+    for i in range(obj_vals.shape[0]):
         obj_vals[i] = obj_ftn(ref_pts[i,:], ref_arr)
 
     print('Initial obj vals min and max:', obj_vals.min(), obj_vals.max())
@@ -80,7 +89,7 @@ def main():
             adj_maxs = best_pts.max(axis=0)
 
             test_pts = adj_mins + (adj_maxs - adj_mins) * np.random.random(
-                (n_ref_pts, adj_mins.shape[0]))
+                (n_test_pts_per_try, adj_mins.shape[0]))
 
             depths = depth_ftn_mp(best_pts, test_pts, usph_vecs, n_cpus, 1)
 
@@ -105,7 +114,7 @@ def main():
         ref_pts = np.concatenate(new_pts, axis=0)
 
         obj_vals = np.empty(ref_pts.shape[0])
-        for i in range(n_ref_pts):
+        for i in range(obj_vals.shape[0]):
             obj_vals[i] = obj_ftn(ref_pts[i,:], ref_arr)
 
         print(
@@ -123,6 +132,27 @@ def main():
 
     print('Final obj vals min and max:', obj_vals.min(), obj_vals.max())
 
+    print('Best prms:')
+    print(best_pts)
+
+    plt.figure(figsize=(10, 10))
+
+    x_arr = np.arange(ref_arr.shape[0])
+
+    for i in range(obj_vals.shape[0]):
+
+        sim_arr = np.array([
+            model(best_pts[i,:], j) for j in range(ref_arr.shape[0])])
+
+        plt.scatter(x_arr, sim_arr, alpha=0.2, c='k')
+
+    plt.plot(ref_arr, alpha=0.95, c='r', label='ref')
+
+    plt.grid()
+    plt.legend()
+
+    plt.show()
+    plt.close()
     return
 
 
