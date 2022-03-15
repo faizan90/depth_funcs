@@ -47,11 +47,11 @@ def main():
     os.chdir(main_dir)
 
     n_dims = 3
-    n_vecs = int(1e3)
+    n_uvecs = int(1e3)
     n_cpus = 8
 
     n_rope_iters = 5
-    n_vecs_per_iter = int(1e2)
+    n_best_pts_per_iter = int(1e2)
     ref_arr = np.arange(50)
 
     cnvx_hull_cntn_tries = 5
@@ -64,7 +64,7 @@ def main():
     ref_pts = ref_min + (
         (ref_max - ref_min) * np.random.random((n_ref_pts, n_dims)))
 
-    usph_vecs = gen_usph_vecs_mp(n_vecs, n_dims, n_cpus)
+    usph_vecs = gen_usph_vecs_mp(n_uvecs, n_dims, n_cpus)
 
     obj_vals = np.empty(ref_pts.shape[0])
     for i in range(obj_vals.shape[0]):
@@ -72,7 +72,10 @@ def main():
 
     print('Initial obj vals min and max:', obj_vals.min(), obj_vals.max())
 
-    best_pts = ref_pts[np.argsort(obj_vals)[:n_vecs_per_iter],:]
+    best_pts = ref_pts[np.argsort(obj_vals)[:n_best_pts_per_iter],:]
+
+    obj_min_global = obj_vals.min()
+    best_global_pt = best_pts[0,:].copy()
 
     for j in range(n_rope_iters):
 
@@ -122,7 +125,17 @@ def main():
             obj_vals.min(),
             obj_vals.max())
 
-        best_pts = ref_pts[np.argsort(obj_vals)[:n_vecs_per_iter],:]
+        best_pts = ref_pts[np.argsort(obj_vals)[:n_best_pts_per_iter],:]
+
+        if obj_vals.min() < obj_min_global:
+            obj_min_global = obj_vals.min()
+            best_global_pt = best_pts[0,:].copy()
+
+        elif obj_vals.min() == obj_min_global:
+            pass
+
+        else:
+            best_pts[-1,:] = best_global_pt
 
         print('\n\n')
 
@@ -149,6 +162,8 @@ def main():
     plt.plot(ref_arr, alpha=0.95, c='r', label='ref')
 
     plt.grid()
+    plt.gca().set_axisbelow(True)
+
     plt.legend()
 
     plt.show()
