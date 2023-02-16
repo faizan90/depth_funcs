@@ -102,8 +102,6 @@ cpdef np.ndarray depth_ftn_mp(
         long[:, ::1] mins_i32, temp_mins_i32
         float[:, ::1] dot_ref_f32, dot_test_f32, dot_test_sort_f32
 
-        long[::1] gdepths_i32
-
     assert ref.shape[0] and ref.shape[1], 'No values in ref!'
     assert test.shape[0] and ref.shape[1], 'No values in test!'
     assert uvecs.shape[0] and uvecs.shape[1], 'No values in uvecs!'
