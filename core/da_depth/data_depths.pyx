@@ -16,12 +16,12 @@ DT_UL_NP = np.uint64
 DT_LL_NP = np.int64
 
 
-cdef extern from "./quick_sort.h" nogil:
+cdef extern from "../aa_basic/quick_sort.h" nogil:
     cdef:
         void quick_sort_f64(DT_D *arr, DT_UL first_index, DT_UL last_index)
 
 
-cdef extern from "./searchsorted.h" nogil:
+cdef extern from "../aa_basic/searchsorted.h" nogil:
     cdef:
         DT_UL searchsorted_f64(DT_D *arr, DT_D value, DT_UL arr_size)
 

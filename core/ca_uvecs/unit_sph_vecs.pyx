@@ -24,7 +24,7 @@ cdef extern from "math.h" nogil:
     cdef DT_D INFINITY
 
 
-cdef extern from "./rand_gen_mp.h" nogil:
+cdef extern from "../ba_rands/rand_gen_mp.h" nogil:
     cdef:
         DT_D rand_c()
         void warm_up()  # call this everytime

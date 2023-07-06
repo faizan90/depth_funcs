@@ -9,7 +9,7 @@
 import numpy as np
 cimport numpy as np
 
-from .dtypes cimport DT_D, DT_UL, DT_ULL
+from ..aa_basic.dtypes cimport DT_D, DT_UL, DT_ULL
 
 
 cpdef np.ndarray depth_ftn_mp(

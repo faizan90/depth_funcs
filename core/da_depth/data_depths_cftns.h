@@ -3,8 +3,8 @@
 #include <time.h>
 #include <omp.h>
 
-#include "quick_sort.h"
-#include "searchsorted.h"
+#include "../aa_basic/quick_sort.h"
+#include "../aa_basic/searchsorted.h"
 
 
 void depth_ftn_c_f64(
